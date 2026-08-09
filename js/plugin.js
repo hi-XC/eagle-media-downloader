@@ -26,6 +26,8 @@ let isInitialized = false;
 
 // 下载源偏好存储 key
 const DOWNLOAD_SOURCE_KEY = "eagle-video-downloader.downloadSource";
+const ALWAYS_ON_TOP_KEY = "eagle-media-downloader.alwaysOnTop";
+let isAlwaysOnTop = false;
 
 /**
  * 获取用户选择的下载源偏好（'auto' | 'mirror' | 'direct'）
@@ -76,6 +78,15 @@ function applyTranslations() {
 
   const urlInput = document.getElementById("urlInput");
   if (urlInput) urlInput.placeholder = i18next.t("ui.inputPlaceholder");
+
+  const addButton = document.getElementById("addButton");
+  if (addButton) addButton.setAttribute("aria-label", i18next.t("ui.downloadBtn"));
+
+  const settingsButton = document.getElementById("depsEntryBtn");
+  if (settingsButton) settingsButton.title = i18next.t("deps.title");
+
+  const backButton = document.getElementById("depsBackBtn");
+  if (backButton) backButton.setAttribute("aria-label", i18next.t("deps.back"));
 }
 
 /**
@@ -86,6 +97,7 @@ eagle.onPluginCreate(async (plugin) => {
   applyTranslations();
   ui.updateTheme();
   setupEventListeners();
+  await initializeAlwaysOnTop();
   await initializeBinaries();
 });
 
@@ -100,14 +112,19 @@ eagle.onThemeChanged(() => {
  * 设置 UI 事件监听器
  */
 function setupEventListeners() {
+  ui.setupDependencyMenus();
+
   document.getElementById("closeButton").addEventListener("click", () => {
     window.close();
   });
+
+  document.getElementById("alwaysOnTopBtn").addEventListener("click", toggleAlwaysOnTop);
 
   document.getElementById("updateBannerBtn").addEventListener("click", handleUpdateClick);
 
   document.getElementById("depsEntryBtn").addEventListener("click", openDepsPage);
   document.getElementById("depsBackBtn").addEventListener("click", closeDepsPage);
+  document.getElementById("completedClearBtn").addEventListener("click", clearCompletedDownloads);
 
   // 下载源偏好切换
   document.getElementById("depsSourceSelect").addEventListener("change", (e) => {
@@ -141,6 +158,28 @@ function setupEventListeners() {
     if (action === "copyError") copyError(id);
     if (action === "copy") copyUrl(id);
   });
+}
+
+async function initializeAlwaysOnTop() {
+  isAlwaysOnTop = localStorage.getItem(ALWAYS_ON_TOP_KEY) === "true";
+  try {
+    await eagle.window.setAlwaysOnTop(isAlwaysOnTop);
+  } catch (error) {
+    isAlwaysOnTop = false;
+  }
+  ui.updateAlwaysOnTopButton(isAlwaysOnTop);
+}
+
+async function toggleAlwaysOnTop() {
+  const nextValue = !isAlwaysOnTop;
+  try {
+    await eagle.window.setAlwaysOnTop(nextValue);
+    isAlwaysOnTop = nextValue;
+    localStorage.setItem(ALWAYS_ON_TOP_KEY, String(nextValue));
+    ui.updateAlwaysOnTopButton(isAlwaysOnTop);
+  } catch (error) {
+    console.error("Failed to update always-on-top state:", error);
+  }
 }
 
 /**
@@ -209,6 +248,13 @@ function addToQueue(url) {
     title: url,
     state: "waiting",
     progress: 0,
+    itemProgress: 0,
+    currentItem: 1,
+    totalItems: 1,
+    completedItems: 0,
+    activeItems: 0,
+    parallel: false,
+    elapsedSeconds: 0,
     speed: "",
     error: null,
   };
@@ -230,44 +276,218 @@ function processQueue() {
   }
 }
 
+async function importInstagramImages(imageItems, sourceUrl, onProgress) {
+  if (imageItems.length === 0) return { importedCount: 0, failures: [] };
+
+  let importedCount = 0;
+  let pendingItems = imageItems;
+  let latestErrors = new Map();
+
+  const runRemotePass = async (items) => {
+    const importedBeforePass = importedCount;
+    const outcome = await eagleApi.importRemoteImagesToEagle(
+      items,
+      sourceUrl,
+      (progress) => onProgress?.({
+        activeItems: progress.activeItems,
+        completedItems: importedBeforePass + progress.completedItems,
+      }),
+    );
+    importedCount += outcome.imported.length;
+    latestErrors = new Map(outcome.failures.map((failure) => [failure.item.index, failure.error]));
+    return outcome.failures.map((failure) => failure.item);
+  };
+
+  pendingItems = await runRemotePass(pendingItems);
+
+  if (pendingItems.length > 0) {
+    try {
+      pendingItems = await downloader.refreshInstagramImageItems(sourceUrl, pendingItems);
+    } catch (error) {
+      // Retry the original URLs before using the yt-dlp fallback.
+    }
+    pendingItems = await runRemotePass(pendingItems);
+  }
+
+  if (pendingItems.length > 0) {
+    const fallbackOutcome = await downloader.downloadInstagramImageFallbacks(sourceUrl, pendingItems);
+    const fallbackFailures = new Map(
+      fallbackOutcome.failures.map((failure) => [failure.index, failure]),
+    );
+
+    for (const result of fallbackOutcome.files) {
+      onProgress?.({ activeItems: 1, completedItems: importedCount });
+      try {
+        await eagleApi.importToEagle(result.path, result.metadata, sourceUrl);
+        importedCount++;
+      } catch (error) {
+        fallbackFailures.set(result.metadata.index, {
+          index: result.metadata.index,
+          type: result.metadata.type,
+          error: error.message,
+        });
+      } finally {
+        downloader.cleanup(result.path);
+        onProgress?.({ activeItems: 0, completedItems: importedCount });
+      }
+    }
+
+    pendingItems = pendingItems.filter((item) => fallbackFailures.has(item.index));
+    latestErrors = new Map(pendingItems.map((item) => [
+      item.index,
+      fallbackFailures.get(item.index)?.error || latestErrors.get(item.index),
+    ]));
+  }
+
+  return {
+    importedCount,
+    failures: pendingItems.map((item) => ({
+      index: item.index,
+      type: item.type,
+      error: latestErrors.get(item.index),
+    })),
+  };
+}
+
 /**
  * 执行单个下载任务
  */
 async function executeDownload(item) {
+  let preparingTimer = null;
   try {
     item.state = "preparing";
+    item.elapsedSeconds = 0;
     ui.updateQueueItem(item.id, item);
+
+    const preparingStartedAt = Date.now();
+    preparingTimer = setInterval(() => {
+      item.elapsedSeconds = Math.floor((Date.now() - preparingStartedAt) / 1000);
+      ui.updateQueueItem(item.id, item);
+    }, 1000);
 
     const videoInfo = await downloader.getVideoInfo(item.url);
+    clearInterval(preparingTimer);
+    preparingTimer = null;
     item.title = videoInfo.title || i18next.t("error.untitledVideo");
     item.state = "downloading";
+    item.progress = 0;
+    item.itemProgress = 0;
+    item.currentItem = 1;
+    item.totalItems = videoInfo.type === "collection" ? videoInfo.items.length : 1;
+    item.completedItems = 0;
+    item.activeItems = 0;
+    item.parallel = false;
     ui.updateQueueItem(item.id, item);
 
-    const results = await downloader.downloadVideo(
+    const sourceUrl = videoInfo.webpage_url || item.url;
+    const collectionItems = videoInfo.type === "collection" ? videoInfo.items : [];
+    const imageItems = collectionItems.filter((entry) => entry.type === "image");
+    const videoItemCount = videoInfo.type === "collection"
+      ? collectionItems.filter((entry) => entry.type === "video").length
+      : 1;
+    const progressState = {
+      imageActive: 0,
+      imageCompleted: 0,
+      imagePending: imageItems.length > 0,
+      videoActive: videoItemCount > 0,
+      videoUnits: 0,
+      speed: "",
+    };
+
+    const renderCombinedProgress = () => {
+      const completedVideoUnits = Math.min(videoItemCount, progressState.videoUnits);
+      const overallPercent = (completedVideoUnits + progressState.imageCompleted)
+        / item.totalItems * 100;
+      item.progress = Math.max(item.progress, Math.min(100, overallPercent));
+      item.completedItems = Math.min(
+        item.totalItems,
+        Math.floor(completedVideoUnits) + progressState.imageCompleted,
+      );
+      item.activeItems = progressState.imageActive + (progressState.videoActive ? 1 : 0);
+      item.parallel = progressState.imagePending;
+      item.speed = progressState.speed;
+      ui.updateQueueItem(item.id, item);
+    };
+
+    const imageImportPromise = importInstagramImages(
+      imageItems,
+      sourceUrl,
+      (progress) => {
+        progressState.imageActive = progress.activeItems;
+        progressState.imageCompleted = progress.completedItems;
+        renderCombinedProgress();
+      },
+    ).finally(() => {
+      progressState.imageActive = 0;
+      progressState.imagePending = false;
+      renderCombinedProgress();
+    });
+
+    const downloadPromise = downloader.downloadVideo(
       item.url,
       (progress) => {
-        item.progress = progress.percent || 0;
-        item.speed = progress.currentSpeed || "";
-        ui.updateQueueItem(item.id, item);
+        const videoOverallPercent = progress.overallPercent ?? progress.percent ?? 0;
+        progressState.videoUnits = videoOverallPercent / 100 * item.totalItems;
+        progressState.speed = progress.currentSpeed || "";
+        item.itemProgress = progress.percent ?? 0;
+        item.currentItem = progress.itemIndex || 1;
+        item.totalItems = progress.itemTotal || item.totalItems;
+        renderCombinedProgress();
       },
       null,
-      videoInfo
-    );
+      videoInfo,
+    ).finally(() => {
+      progressState.videoActive = false;
+      progressState.videoUnits = videoItemCount;
+      progressState.speed = "";
+      renderCombinedProgress();
+    });
+
+    const [outcome, imageOutcome] = await Promise.all([downloadPromise, imageImportPromise]);
+
+    let importedCount = imageOutcome.importedCount;
+    const failures = [...outcome.failures, ...imageOutcome.failures];
+
+    for (const result of outcome.files) {
+      try {
+        await eagleApi.importToEagle(result.path, result.metadata, sourceUrl);
+        importedCount++;
+      } catch (error) {
+        failures.push({
+          index: result.metadata.index || importedCount + 1,
+          type: result.metadata.type || "media",
+          error: error.message,
+        });
+      } finally {
+        downloader.cleanup(result.path);
+      }
+    }
+
+    if (importedCount === 0) {
+      throw new Error(failures[0]?.error || i18next.t("error.eagleImportFailed"));
+    }
 
     item.state = "completed";
     item.progress = 100;
     item.speed = "";
+    item.activeItems = 0;
+    item.parallel = false;
+    item.completedItems = importedCount;
+    item.totalItems = outcome.total;
+    item.summary = i18next.t("queue.completedCount", {
+      completed: importedCount,
+      total: outcome.total,
+    });
+    item.error = failures.length > 0
+      ? failures.map((failure) => `#${failure.index}: ${failure.error || i18next.t("queue.error")}`).join("\n")
+      : null;
     ui.updateQueueItem(item.id, item);
-
-    for (const result of results) {
-      await eagleApi.importToEagle(result.path, result.metadata, item.url);
-      downloader.cleanup(result.path);
-    }
   } catch (error) {
     item.state = "error";
     item.error = error.message || i18next.t("download.failed");
     ui.updateQueueItem(item.id, item);
   } finally {
+    if (preparingTimer) clearInterval(preparingTimer);
     activeCount--;
     processQueue();
   }
@@ -282,10 +502,29 @@ function retryDownload(id) {
 
   item.state = "waiting";
   item.progress = 0;
+  item.itemProgress = 0;
+  item.currentItem = 1;
+  item.totalItems = 1;
+  item.completedItems = 0;
+  item.activeItems = 0;
+  item.parallel = false;
+  item.elapsedSeconds = 0;
   item.error = null;
   item.speed = "";
   ui.updateQueueItem(item.id, item);
   processQueue();
+}
+
+function clearCompletedDownloads() {
+  const completedIds = downloadQueue
+    .filter((item) => item.state === "completed")
+    .map((item) => item.id);
+
+  for (let index = downloadQueue.length - 1; index >= 0; index--) {
+    if (downloadQueue[index].state === "completed") downloadQueue.splice(index, 1);
+  }
+
+  ui.removeQueueItems(completedIds);
 }
 
 /**

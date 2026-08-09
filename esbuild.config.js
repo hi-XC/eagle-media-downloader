@@ -1,5 +1,5 @@
 /**
- * esbuild configuration for Eagle Video Downloader plugin
+ * esbuild configuration for Eagle Media Downloader plugin
  */
 
 const esbuild = require('esbuild');

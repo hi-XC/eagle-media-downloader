@@ -3,9 +3,9 @@
 前置条件：`gh auth login`（首次使用）
 
 Remote 说明：
-- `origin`   = 自己的 fork（fansanqiu/eagle-twitter-video-downloader）← PR 从此发起
-- `upstream` = 原始仓库（OlivierEstevez/eagle-twitter-video-downloader）← PR 目标（如需向上游提 PR）
-- 主分支：`master`
+- `origin`   = 当前项目（hi-XC/eagle-media-downloader）← PR 从此发起
+- `upstream` = 上游项目（fansanqiu/eagle-video-downloader）← 仅在改动兼容时向其提交 PR
+- 主分支：`main`
 
 步骤：
 
@@ -16,7 +16,7 @@ Remote 说明：
 
 2. **提交并推送到自己的 fork**（如未完成）：
    ```bash
-   git status && git log origin/master..HEAD --oneline
+   git status && git log origin/main..HEAD --oneline
    git push -u origin $(git branch --show-current)
    ```
 
@@ -24,13 +24,13 @@ Remote 说明：
 
    **合并到自己 fork 的 master**（日常整合分支）：
    ```bash
-   gh pr create --base master --head $(git branch --show-current) --repo fansanqiu/eagle-twitter-video-downloader \
+   gh pr create --base main --head $(git branch --show-current) --repo hi-XC/eagle-media-downloader \
      --title "✨ feat: <描述>" --body "<详情>"
    ```
 
    **向上游原始仓库提 PR**（贡献代码）：
    ```bash
-   gh pr create --base master --head fansanqiu:$(git branch --show-current) --repo OlivierEstevez/eagle-twitter-video-downloader \
+   gh pr create --base master --head hi-XC:$(git branch --show-current) --repo fansanqiu/eagle-video-downloader \
      --title "✨ feat: <描述>" --body "<详情>"
    ```
 

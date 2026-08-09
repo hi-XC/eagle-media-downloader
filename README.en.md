@@ -1,8 +1,8 @@
-<img src="./docs/banner-docs.png">
-
-# Eagle Video Downloader
+# Eagle Media Downloader
 
 English | [中文](./README.md)
+
+> This is an independent development preview temporarily named Media Downloader. It is maintained by XC, based on fansanqiu's MIT-licensed project, and uses a separate Eagle plugin ID.
 
 Download videos directly to Eagle from 1000+ websites. Built on [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
@@ -14,11 +14,11 @@ YouTube, Twitter / X, TikTok, Bilibili, Instagram, Vimeo, and [many more](https:
 
 Supports 1000+ video websites. Downloads yt-dlp automatically on first run. Uses Eagle's built-in ffmpeg for audio/video merging. Automatically imports downloaded videos to Eagle with metadata. Supports Chinese and English interfaces with real-time progress display.
 
+The development build adds Instagram post and carousel support. It preserves the original item order, supports image-only, video-only, and mixed carousels, and imports every item separately. It only handles public content available without login and does not read browser cookies.
+
 ## Installation
 
-Install via [Eagle Community](https://community-cn.eagle.cool/plugins) or search for it in Eagle's plugin center.
-
-Manual install: download the [latest release](https://github.com/fansanqiu/eagle-video-downloader/releases), then in Eagle go to Plugins → Developer Options → Import Local Project.
+Download the latest `.eagleplugin` package from [GitHub Releases](https://github.com/hi-XC/eagle-media-downloader/releases) and open it to install. Plugin Center installation will be added after Eagle review.
 
 ## First Run
 
@@ -47,10 +47,12 @@ Eagle 4.0 or higher. Internet connection required.
 
 ## License
 
-MIT © [fansanqiu](https://github.com/fansanqiu)
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for the complete copyright notices.
 
-For personal use only. Please comply with the terms of service of video platforms and applicable copyright laws.
+The software license does not grant rights to third-party media. Only download public media that you are authorized to save and use, and comply with applicable platform terms and laws.
 
 ## Acknowledgements
 
-This project is based on [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to the original author for the foundational work.
+This project is based on [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader), which was derived from [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to both upstream maintainers and their contributors.
+
+See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party components and runtime dependencies.

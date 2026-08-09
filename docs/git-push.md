@@ -3,8 +3,8 @@
 适用场景：日常提交、更新已有 PR（推送到 PR 分支会自动更新）
 
 Remote 说明：
-- `origin`   = 自己的 fork（fansanqiu/eagle-twitter-video-downloader）← 推送目标
-- `upstream` = 原始仓库（OlivierEstevez/eagle-twitter-video-downloader）← 只拉取，不推送
+- `origin`   = 当前项目（hi-XC/eagle-media-downloader）← 推送目标
+- `upstream` = 上游项目（fansanqiu/eagle-video-downloader）← 只拉取，不推送
 
 步骤：
 

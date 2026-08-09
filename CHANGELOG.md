@@ -1,5 +1,35 @@
 # Changelog
 
+Versions before 0.1.0 are inherited from the upstream projects and retained for historical attribution.
+
+## 0.1.0 (development fork)
+
+- 新增 Instagram 公开帖子与 Carousel 混合素材下载
+- 图片与视频按原帖顺序编号，并作为独立素材导入 Eagle
+- 单项失败时保留其他成功素材，并显示完成数量
+- 获取素材信息时显示动态进度与真实等待时间
+- Carousel 下载显示总体进度及当前条目进度
+- 图片通过 Eagle 官方接口最多 8 项并发导入，并与视频下载同时进行
+- 图片导入失败时自动刷新临时地址，并回退到 yt-dlp 下载
+- 新增可记忆状态的窗口置顶按钮
+- 导入素材时不再自动添加平台标签
+- 使用独立插件 ID，不覆盖原版 Video Downloader
+- 不读取浏览器 Cookie，不处理需要登录的内容
+
+---
+
+- Added downloads for public Instagram posts and mixed-media carousels
+- Preserved post order and imported every image or video as a separate Eagle item
+- Kept successful items when an individual item failed and displayed the completion count
+- Added indeterminate parsing feedback with real elapsed time
+- Added overall and current-item progress for carousel downloads
+- Imported up to eight images concurrently through the Eagle API while videos downloaded
+- Refreshed temporary image URLs and fell back to yt-dlp after remote import failures
+- Added a persistent always-on-top window toggle
+- Stopped automatically adding platform tags on import
+- Added a separate plugin ID so the original Video Downloader remains installed
+- No browser cookies or login-required content
+
 ## 2.3.0
 
 - 新增依赖管理页面：可查看 yt-dlp 与 ffmpeg 的安装状态和版本，支持一键安装、更新、重装、卸载

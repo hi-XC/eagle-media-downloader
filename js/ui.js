@@ -27,11 +27,29 @@ function updateTheme() {
   htmlEl.classList.remove("no-transition");
 }
 
+function updateAlwaysOnTopButton(isPinned) {
+  const button = document.getElementById("alwaysOnTopBtn");
+  if (!button) return;
+  button.classList.toggle("active", isPinned);
+  button.setAttribute("aria-pressed", String(isPinned));
+  button.title = i18next.t(isPinned ? "window.unpin" : "window.pin");
+}
+
 /**
  * 显示主 UI
  */
 function showMainUI() {
   document.getElementById("mainContainer")?.classList.remove("hidden");
+  setHeaderMode("main");
+}
+
+function setHeaderMode(mode) {
+  const isSettings = mode === "settings";
+  document.getElementById("appLogo")?.classList.toggle("hidden", isSettings);
+  document.getElementById("depsEntryBtn")?.classList.toggle("hidden", isSettings);
+
+  const title = document.getElementById("appName");
+  if (title) title.textContent = i18next.t(isSettings ? "deps.title" : "ui.appTitle");
 }
 
 /**
@@ -55,11 +73,17 @@ function setupInputBar() {
 
   if (!urlInput || !addButton) return;
 
-  addButton.classList.add("disabled");
+  const syncButtonState = () => {
+    const enabled = isValidUrl(urlInput.value.trim());
+    addButton.classList.toggle("disabled", !enabled);
+    addButton.disabled = !enabled;
+  };
+
+  syncButtonState();
 
   urlInput.addEventListener("input", () => {
     setInputBarState("idle");
-    addButton.classList.toggle("disabled", urlInput.value.trim().length === 0);
+    syncButtonState();
   });
 
   const handleSubmit = () => {
@@ -73,7 +97,7 @@ function setupInputBar() {
 
     document.dispatchEvent(new CustomEvent("startDownload", { detail: { url } }));
     urlInput.value = "";
-    addButton.classList.add("disabled");
+    syncButtonState();
     setInputBarState("idle");
   };
 
@@ -110,6 +134,7 @@ function appendQueueItem(item) {
   const list = document.querySelector(".download-list");
   if (!list) return;
   list.appendChild(createQueueItemEl(item));
+  refreshCompletedSummary();
   // 自动滚动到底部
   list.scrollTop = list.scrollHeight;
 }
@@ -123,17 +148,19 @@ function createQueueItemEl(item) {
   el.dataset.id = item.id;
 
   el.innerHTML = `
-    <div class="item-title">${escapeHtml(item.title)}</div>
-    <div class="item-progress-bar">
+    <div class="item-heading">
+      <img class="item-state-icon" src="assets/icon_check.svg" width="16" height="16" alt="" />
+      <div class="item-title">${escapeHtml(item.title)}</div>
+      <span class="item-overall">${escapeHtml(getOverallText(item))}</span>
+    </div>
+    <span class="item-meta">${escapeHtml(getMetaText(item))}</span>
+    <div class="item-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(item.progress)}">
       <div class="item-progress-fill" style="width: ${item.progress}%"></div>
     </div>
-    <div class="item-footer">
-      <span class="item-meta">${escapeHtml(getMetaText(item))}</span>
-      <div class="item-actions ${item.state === "error" ? "" : "hidden"}">
-        <button class="item-action-btn" data-action="retry" data-id="${item.id}">${i18next.t("queue.retry")}</button>
-        <button class="item-action-btn" data-action="copyError" data-id="${item.id}" id="copy-error-btn-${item.id}">${i18next.t("queue.copyError")}</button>
-        <button class="item-action-btn" data-action="copy" data-id="${item.id}" id="copy-btn-${item.id}">${i18next.t("queue.copyUrl")}</button>
-      </div>
+    <div class="item-actions ${item.state === "error" ? "" : "hidden"}">
+      <button class="item-action-btn" data-action="retry" data-id="${item.id}">${i18next.t("queue.retry")}</button>
+      <button class="item-action-btn" data-action="copyError" data-id="${item.id}" id="copy-error-btn-${item.id}">${i18next.t("queue.copyError")}</button>
+      <button class="item-action-btn" data-action="copy" data-id="${item.id}" id="copy-btn-${item.id}">${i18next.t("queue.copyUrl")}</button>
     </div>
   `;
 
@@ -152,14 +179,49 @@ function updateQueueItem(id, data) {
   const titleEl = el.querySelector(".item-title");
   if (titleEl) titleEl.textContent = data.title;
 
+  const overall = el.querySelector(".item-overall");
+  if (overall) overall.textContent = getOverallText(data);
+
   const fill = el.querySelector(".item-progress-fill");
   if (fill) fill.style.width = `${data.progress}%`;
+  const overallBar = el.querySelector(".item-progress-bar");
+  if (overallBar) overallBar.setAttribute("aria-valuenow", String(Math.round(data.progress)));
 
   const meta = el.querySelector(".item-meta");
   if (meta) meta.textContent = getMetaText(data);
 
   const actions = el.querySelector(".item-actions");
   if (actions) actions.classList.toggle("hidden", data.state !== "error");
+
+  refreshCompletedSummary();
+}
+
+function getOverallText(item) {
+  if (item.state === "downloading") return `${Math.round(item.progress || 0)}%`;
+  if (item.state === "completed") {
+    const completed = item.completedItems || item.totalItems || 1;
+    return `${completed}/${item.totalItems || completed}`;
+  }
+  return "";
+}
+
+function refreshCompletedSummary() {
+  const completedCount = document.querySelectorAll(".download-item.completed").length;
+  const summary = document.getElementById("completedSummary");
+  const text = document.getElementById("completedSummaryText");
+  const clear = document.getElementById("completedClearBtn");
+
+  summary?.classList.toggle("hidden", completedCount === 0);
+  clear?.classList.toggle("hidden", completedCount === 0);
+  if (text) text.textContent = i18next.t("queue.completedTotal", { count: completedCount });
+  if (clear) clear.textContent = i18next.t("queue.clear");
+}
+
+function removeQueueItems(ids) {
+  for (const id of ids) {
+    document.querySelector(`.download-item[data-id="${id}"]`)?.remove();
+  }
+  refreshCompletedSummary();
 }
 
 /**
@@ -192,13 +254,31 @@ function getMetaText(item) {
     case "waiting":
       return i18next.t("queue.waiting");
     case "preparing":
-      return i18next.t("queue.preparing");
+      return item.elapsedSeconds >= 5
+        ? i18next.t("queue.preparingElapsed", { seconds: item.elapsedSeconds })
+        : i18next.t("queue.preparing");
     case "downloading":
+      if (item.totalItems > 1) {
+        if (item.parallel) {
+          const parallelText = i18next.t("queue.parallelProgress", {
+            completed: item.completedItems || 0,
+            total: item.totalItems,
+            active: item.activeItems || 0,
+          });
+          return item.speed ? `${parallelText} · ${item.speed}` : parallelText;
+        }
+        const progressText = i18next.t("queue.itemProgress", {
+          current: item.currentItem,
+          total: item.totalItems,
+          percent: Math.round(item.itemProgress || 0),
+        });
+        return item.speed ? `${progressText} · ${item.speed}` : progressText;
+      }
       return item.speed
         ? `${Math.round(item.progress)}% · ${item.speed}`
         : `${Math.round(item.progress)}%`;
     case "completed":
-      return i18next.t("queue.completed");
+      return item.summary || i18next.t("queue.completed");
     case "error":
       return item.error || i18next.t("queue.error");
     default:
@@ -219,12 +299,55 @@ function escapeHtml(str) {
 
 function getDepCardEls(prefix) {
   return {
+    cardEl:       document.querySelector(`.dep-card[data-dependency="${prefix}"]`),
     statusEl:     document.getElementById(`${prefix}Status`),
     detailEl:     document.getElementById(`${prefix}Detail`),
     progressWrap: document.getElementById(`${prefix}ProgressWrap`),
     progressFill: document.getElementById(`${prefix}ProgressFill`),
     actionsEl:    document.getElementById(`${prefix}Actions`),
   };
+}
+
+function setDepCardState(prefix, state) {
+  const { cardEl } = getDepCardEls(prefix);
+  if (!cardEl) return;
+
+  cardEl.className = `dep-card state-${state}`;
+  const hasMenu = prefix === "ytdlp"
+    ? ["installed", "latest", "outdated", "done"].includes(state)
+    : ["installed", "done"].includes(state);
+  const showMore = hasMenu || (prefix === "ffmpeg" && state === "eagle");
+  const moreButton = cardEl.querySelector(".dep-more-btn");
+  cardEl.classList.toggle("more-visible", showMore);
+  cardEl.classList.toggle("menu-enabled", hasMenu);
+  if (moreButton) {
+    moreButton.disabled = !hasMenu;
+    moreButton.setAttribute("aria-expanded", "false");
+  }
+}
+
+function closeDependencyMenus(except = null) {
+  for (const card of document.querySelectorAll(".dep-card.menu-open")) {
+    if (card === except) continue;
+    card.classList.remove("menu-open");
+    card.querySelector(".dep-more-btn")?.setAttribute("aria-expanded", "false");
+  }
+}
+
+function setupDependencyMenus() {
+  for (const button of document.querySelectorAll(".dep-more-btn")) {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const card = button.closest(".dep-card");
+      if (!card?.classList.contains("menu-enabled")) return;
+      const shouldOpen = !card.classList.contains("menu-open");
+      closeDependencyMenus(card);
+      card.classList.toggle("menu-open", shouldOpen);
+      button.setAttribute("aria-expanded", String(shouldOpen));
+    });
+  }
+
+  document.addEventListener("click", () => closeDependencyMenus());
 }
 
 function getUpdateBannerEls() {
@@ -244,16 +367,17 @@ function getUpdateBannerEls() {
  */
 function showDepsPage({ gating = false, sourcePref = 'auto' } = {}) {
   // 填充静态文本
-  const backBtn = document.getElementById("depsBackBtn");
-  const subTitle = document.querySelector(".deps-subheader-title");
   const notice = document.getElementById("depsNotice");
+  const engineTitle = document.getElementById("depsEngineTitle");
+  const advancedTitle = document.getElementById("depsAdvancedTitle");
   const ytdlpDesc = document.getElementById("ytdlpDesc");
   const ffmpegDesc = document.getElementById("ffmpegDesc");
   const sourceLabel = document.getElementById("depsSourceLabel");
   const sourceSelect = document.getElementById("depsSourceSelect");
-  if (backBtn) backBtn.textContent = i18next.t("deps.back");
-  if (subTitle) subTitle.textContent = i18next.t("deps.title");
+  document.getElementById("depsBackBtn")?.setAttribute("title", i18next.t("deps.back"));
   if (notice) notice.textContent = i18next.t("deps.setupRequired");
+  if (engineTitle) engineTitle.textContent = i18next.t("deps.engineTitle");
+  if (advancedTitle) advancedTitle.textContent = i18next.t("deps.advancedTitle");
   if (ytdlpDesc) ytdlpDesc.textContent = i18next.t("deps.ytdlpDesc");
   if (ffmpegDesc) ffmpegDesc.textContent = i18next.t("deps.ffmpegDesc");
   if (sourceLabel) sourceLabel.textContent = i18next.t("deps.sourceLabel");
@@ -269,8 +393,11 @@ function showDepsPage({ gating = false, sourcePref = 'auto' } = {}) {
 
   document.getElementById("depsContainer")?.classList.remove("hidden");
   document.getElementById("mainContainer")?.classList.add("hidden");
-  document.getElementById("depsEntryBtn")?.classList.add("hidden");
+  setHeaderMode("settings");
   setDepsGating(gating);
+  closeDependencyMenus();
+  const container = document.getElementById("depsContainer");
+  if (container) container.scrollTop = 0;
 }
 
 /**
@@ -303,7 +430,8 @@ function hideDepsPage() {
   setDepsGating(false);
   document.getElementById("depsContainer")?.classList.add("hidden");
   document.getElementById("mainContainer")?.classList.remove("hidden");
-  document.getElementById("depsEntryBtn")?.classList.remove("hidden");
+  setHeaderMode("main");
+  closeDependencyMenus();
 }
 
 /**
@@ -316,6 +444,7 @@ function updateYtdlpCard(state, data = {}) {
 
   if (!statusEl) return;
 
+  setDepCardState("ytdlp", state);
   statusEl.className = "dep-status";
   progressWrap?.classList.add("hidden");
 
@@ -418,6 +547,7 @@ function updateFfmpegCard(state, data = {}) {
 
   if (!statusEl) return;
 
+  setDepCardState("ffmpeg", state);
   statusEl.className = "dep-status";
   progressWrap?.classList.add("hidden");
 
@@ -559,12 +689,15 @@ function hideUpdateBanner() {
 
 module.exports = {
   updateTheme,
+  updateAlwaysOnTopButton,
   showMainUI,
+  setupDependencyMenus,
   isValidUrl,
   setupInputBar,
   setInputBarState,
   appendQueueItem,
   updateQueueItem,
+  removeQueueItems,
   showCopiedFeedback,
   showCopiedErrorFeedback,
   showUpdateAvailable,

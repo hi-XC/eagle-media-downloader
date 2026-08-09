@@ -8,6 +8,7 @@ dist/
 # Binary files (downloaded at runtime)
 Plugin/bin/
 bin/
+*.eagleplugin
 
 # OS files
 .DS_Store
