@@ -29,9 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
     back.classList.remove("hidden");
     appName.textContent = "Settings";
     document.getElementById("depsEngineTitle").textContent = "Download engine";
-    document.getElementById("depsAdvancedTitle").textContent = "Advanced";
-    document.getElementById("depsSourceLabel").textContent = "Download source";
-    document.getElementById("depsSourceSelect").innerHTML = "<option>Automatic</option>";
+    document.getElementById("ytdlpDesc").textContent = "Video extraction & download engine";
+    document.getElementById("ffmpegDesc").textContent = "Video merging & transcoding engine";
 
     const setDependency = (prefix, status, detail, hasMenu) => {
       document.getElementById(prefix + "Status").textContent = status;
@@ -43,10 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     setDependency("ytdlp", "Up to date", "Version 2026.07.04", true);
-    setDependency("ffmpeg", "Eagle built-in", "Version 6.1", false);
+    setDependency("ffmpeg", "Managed by Eagle", "Version 6.1", false);
     const ffmpegMore = document.querySelector('[data-dependency="ffmpeg"] .dep-more-btn');
     ffmpegMore.disabled = true;
-    ffmpegMore.closest(".dep-card").classList.add("more-visible");
     return;
   }
 

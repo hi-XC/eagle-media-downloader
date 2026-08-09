@@ -416,42 +416,6 @@
       flex-shrink: 0;
     }
 
-    .deps-source-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      flex-shrink: 0;
-    }
-
-    .deps-source-label {
-      font-size: 11px;
-      color: var(--fg2);
-      flex-shrink: 0;
-    }
-
-    .deps-source-select {
-      font-size: 11px;
-      color: var(--fg1);
-      background: rgba(255, 255, 255, 0.06);
-      border: none;
-      border-radius: 4px;
-      padding: 3px 6px;
-      cursor: pointer;
-      max-width: 60%;
-    }
-
-    .deps-source-hint {
-      padding: 0 12px 8px;
-      font-size: 11px;
-      line-height: 1.4;
-      color: var(--fg2);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      flex-shrink: 0;
-    }
-
     .deps-list {
       flex: 1;
       overflow-y: auto;
@@ -736,19 +700,6 @@
               </div>
               <div id="ffmpegActions" class="dep-actions"></div>
             </div>
-          </div>
-        </section>
-        <section class="settings-section">
-          <h2 id="depsAdvancedTitle" class="settings-section-title"></h2>
-          <div class="settings-group">
-            <div class="deps-source-row">
-              <label id="depsSourceLabel" for="depsSourceSelect" class="deps-source-label"></label>
-              <div class="deps-source-control">
-                <select id="depsSourceSelect" class="deps-source-select no-drag"></select>
-                <img src="assets/icon_chevron_right.svg" width="16" height="16" alt="" />
-              </div>
-            </div>
-            <p id="depsSourceHint" class="deps-source-hint"></p>
           </div>
         </section>
       </div>

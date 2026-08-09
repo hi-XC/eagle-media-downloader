@@ -11,11 +11,9 @@ const {
   getYtDlpUpdateInfo,
   getInstalledYtDlpVersion,
   getLatestYtDlpVersion,
+  setFfmpegPath,
   getFfmpegSource,
   getFfmpegVersion,
-  canInstallFfmpeg,
-  downloadFfmpeg,
-  uninstallFfmpeg,
 } = require("./binary");
 const downloader = require("./downloader");
 const eagleApi = require("./eagle");
@@ -24,24 +22,8 @@ const ui = require("./ui");
 // 状态管理
 let isInitialized = false;
 
-// 下载源偏好存储 key
-const DOWNLOAD_SOURCE_KEY = "eagle-video-downloader.downloadSource";
 const ALWAYS_ON_TOP_KEY = "eagle-media-downloader.alwaysOnTop";
 let isAlwaysOnTop = false;
-
-/**
- * 获取用户选择的下载源偏好（'auto' | 'mirror' | 'direct'）
- */
-function getDownloadSourcePref() {
-  return localStorage.getItem(DOWNLOAD_SOURCE_KEY) || "auto";
-}
-
-/**
- * 保存用户选择的下载源偏好
- */
-function setDownloadSourcePref(value) {
-  localStorage.setItem(DOWNLOAD_SOURCE_KEY, value);
-}
 
 // 下载队列
 const downloadQueue = [];
@@ -126,12 +108,6 @@ function setupEventListeners() {
   document.getElementById("depsBackBtn").addEventListener("click", closeDepsPage);
   document.getElementById("completedClearBtn").addEventListener("click", clearCompletedDownloads);
 
-  // 下载源偏好切换
-  document.getElementById("depsSourceSelect").addEventListener("change", (e) => {
-    setDownloadSourcePref(e.target.value);
-    ui.updateDownloadSourceHint(e.target.value);
-  });
-
   // yt-dlp 操作按钮事件委托
   document.getElementById("ytdlpActions").addEventListener("click", (e) => {
     const btn = e.target.closest("[data-ytdlp-action]");
@@ -187,6 +163,8 @@ async function toggleAlwaysOnTop() {
  * yt-dlp 和 ffmpeg 均为必需依赖，缺失时进入依赖管理页（门槛模式）强制安装
  */
 async function initializeBinaries() {
+  await syncFfmpegDependency();
+
   if (depsReady()) {
     isInitialized = true;
     initializeMainUI();
@@ -196,8 +174,31 @@ async function initializeBinaries() {
   }
 
   // 缺少必要依赖：进入依赖管理页门槛模式，装齐后自动进入主界面
-  ui.showDepsPage({ gating: true, sourcePref: getDownloadSourcePref() });
+  ui.showDepsPage({ gating: true });
   loadDepsInfo();
+}
+
+async function syncFfmpegDependency() {
+  const ffmpegModule = eagle.extraModule?.ffmpeg;
+  if (!ffmpegModule) {
+    setFfmpegPath(null);
+    return false;
+  }
+
+  try {
+    const installed = await ffmpegModule.isInstalled();
+    if (!installed) {
+      setFfmpegPath(null);
+      return false;
+    }
+    const paths = await ffmpegModule.getPaths();
+    setFfmpegPath(paths?.ffmpeg);
+    return !!getFfmpegSource();
+  } catch (error) {
+    setFfmpegPath(null);
+    console.error("Failed to resolve Eagle FFmpeg dependency:", error);
+    return false;
+  }
 }
 
 /**
@@ -551,7 +552,7 @@ async function checkForUpdateAndNotify() {
       ui.showUpdateAvailable(latestVersion);
     }
   } catch (e) {
-    // 网络错误时静默忽略，不影响主功能
+    // 检查失败时静默忽略，不影响主功能
   }
 }
 
@@ -559,7 +560,7 @@ async function checkForUpdateAndNotify() {
  * 打开依赖管理页面并加载信息
  */
 function openDepsPage() {
-  ui.showDepsPage({ sourcePref: getDownloadSourcePref() });
+  ui.showDepsPage();
   loadDepsInfo();
 }
 
@@ -573,27 +574,20 @@ function closeDepsPage() {
 /**
  * 加载并展示各依赖的当前状态
  *
- * 三阶段渲染：
- *   阶段 0（同步，瞬间）：existsSync 判断是否安装 → 立即渲染状态 + 按钮
- *   阶段 1（后台，~200ms）：spawn 子进程取本地版本号 → 补充版本显示
- *   阶段 2（后台，~1-3s）：GitHub API 检查最新版 → 静默更新徽章
- *
  * @param {Object} [options]
  * @param {string} [options.ytdlpKnownLatest] 刚下载完成的 yt-dlp 版本号——
  *   下载源本身就是 GitHub 最新发布版，因此无需再走"检查更新"流程，
  *   直接渲染为 latest 状态，避免安装/更新完成后出现多余的"检查更新中"闪烁
  */
-function loadDepsInfo(options = {}) {
-  // 阶段 0：纯同步，立即渲染
-  const ffmpegSource = getFfmpegSource();
+async function loadDepsInfo(options = {}) {
   const ytdlpInstalled = isYtDlpInstalled();
+  ui.updateFfmpegCard('checking');
+  const ffmpegReady = await syncFfmpegDependency();
 
-  if (ffmpegSource === 'eagle') {
+  if (ffmpegReady) {
     ui.updateFfmpegCard('eagle', {});
-  } else if (ffmpegSource === 'own') {
-    ui.updateFfmpegCard('installed', {});
   } else {
-    ui.updateFfmpegCard('missing', { canInstall: canInstallFfmpeg() });
+    ui.updateFfmpegCard('missing');
   }
 
   if (!ytdlpInstalled) {
@@ -607,11 +601,9 @@ function loadDepsInfo(options = {}) {
     loadYtdlpUpdateStatus();
   }
 
-  // ffmpeg 版本独立获取
-  if (ffmpegSource) {
+  if (ffmpegReady) {
     getFfmpegVersion().then((ffmpegVersion) => {
-      if (ffmpegSource === 'eagle') ui.updateFfmpegCard('eagle', { version: ffmpegVersion });
-      else if (ffmpegSource === 'own') ui.updateFfmpegCard('installed', { version: ffmpegVersion });
+      ui.updateFfmpegCard('eagle', { version: ffmpegVersion });
     }).catch(() => {});
   }
 }
@@ -619,7 +611,7 @@ function loadDepsInfo(options = {}) {
 /**
  * 检查 yt-dlp 是否有更新并渲染对应卡片状态
  * 阶段 1（后台，~200ms）：spawn 子进程取本地版本号 → 补充版本显示
- * 阶段 2（后台，~1-3s）：GitHub API 检查最新版 → 静默更新徽章
+ * 阶段 2：与当前审核版本允许安装的版本比较
  */
 function loadYtdlpUpdateStatus() {
   // 同步阶段即刻显示"检查更新中..."，版本号由后台 spawn 补充
@@ -642,42 +634,23 @@ function loadYtdlpUpdateStatus() {
         ui.updateYtdlpCard("latest", { version: installedVersion });
       }
     }).catch(() => {
-      // 网络不通：移除"检查中"提示，保留已安装状态
+      // 版本信息不可用时，保留已安装状态
       ui.updateYtdlpCard("installed", { version: installedVersion });
     });
   }).catch(() => {});
 }
 
 /**
- * 执行 ffmpeg 操作：install / reinstall / uninstall
+ * 打开 Eagle 官方 FFmpeg 依赖安装页
  */
-async function handleFfmpegAction(action) {
-  if (action === 'uninstall') {
-    uninstallFfmpeg();
-    ui.updateFfmpegCard('missing', { canInstall: canInstallFfmpeg() });
-    refreshDepsGatingState();
-    return;
-  }
-
-  const statusKey = action === 'reinstall' ? 'deps.reinstalling' : 'deps.installing';
-  const doneKey   = action === 'reinstall' ? 'deps.doneReinstalled' : 'deps.doneInstalled';
-  const statusText = i18next.t(statusKey);
-
-  ui.updateFfmpegCard('busy', { statusText, percent: 0 });
-
+async function handleFfmpegAction() {
+  ui.updateFfmpegCard('checking');
   try {
-    await downloadFfmpeg((progress) => {
-      ui.updateFfmpegCard('busy', { statusText, percent: progress });
-    }, getDownloadSourcePref());
-
-    const version = await getFfmpegVersion();
-    ui.updateFfmpegCard('done', { statusText: i18next.t(doneKey), version });
-    setTimeout(() => {
-      loadDepsInfo();
-      refreshDepsGatingState();
-    }, 1500);
-  } catch (e) {
-    ui.updateFfmpegCard('error', { message: e.message, retryAction: action });
+    await eagle.extraModule.ffmpeg.install();
+    await loadDepsInfo();
+    refreshDepsGatingState();
+  } catch (error) {
+    ui.updateFfmpegCard('error', { message: error.message });
   }
 }
 
@@ -711,7 +684,7 @@ async function handleYtdlpAction(action) {
   try {
     await downloadYtDlp((progress) => {
       ui.updateYtdlpCard("busy", { statusText, percent: progress });
-    }, getDownloadSourcePref());
+    });
 
     const version = await getInstalledYtDlpVersion();
     ui.updateYtdlpCard("done", { statusText: i18next.t(doneKey), version });
@@ -737,7 +710,7 @@ async function handleUpdateClick() {
   try {
     await downloadYtDlp((progress) => {
       ui.setUpdateBannerUpdating(progress);
-    }, getDownloadSourcePref());
+    });
     ui.setUpdateBannerDone();
     setTimeout(() => ui.hideUpdateBanner(), 2000);
   } catch (e) {

@@ -1,4 +1,4 @@
-# Eagle Media Downloader
+# Media Downloader for Eagle
 
 English | [中文](./README.md)
 
@@ -35,7 +35,7 @@ Download images and videos from public posts directly into [Eagle](https://eagle
 
 | Completed | Settings |
 | --- | --- |
-| ![Completed downloads](./docs/screenshots/completed.png) | ![Download engine and source settings](./docs/screenshots/settings.png) |
+| ![Completed downloads](./docs/screenshots/completed.png) | ![Download engine settings](./docs/screenshots/settings.png) |
 
 ## Installation
 
@@ -45,7 +45,7 @@ Requirements: Eagle 4.0 or higher and an internet connection.
 2. Under `Assets`, download `eagle-media-downloader-v0.1.0.eagleplugin`.
 3. Open the downloaded package and follow the Eagle installation prompt.
 
-The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads `yt-dlp`. When processing audio and video, the plugin prefers Eagle's built-in `ffmpeg`.
+The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads a pinned version from the official yt-dlp GitHub Release and verifies its integrity. FFmpeg is provided and managed through Eagle's official dependency plugin.
 
 ## Usage
 
@@ -79,4 +79,4 @@ The MIT License applies only to this project's code. It does not grant copyright
 
 Maintained by XC and based on [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader). That upstream project was derived from [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to the upstream maintainers and contributors.
 
-See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party components and runtime dependencies.
+See [PRIVACY.md](./PRIVACY.md) for data handling details and [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party components and runtime dependencies.

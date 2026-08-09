@@ -304,18 +304,6 @@ function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
       if (code === 0) {
         resolve(stdout);
       } else {
-        // SSL 错误时自动重试，添加 --no-check-certificate
-        const isSSLError = stderr.includes("SSL") || stderr.includes("ssl");
-        const alreadySkipping = args.includes("--no-check-certificate");
-        if (isSSLError && !alreadySkipping) {
-          execYtDlp([...args, "--no-check-certificate"], onProgress, onOutput)
-            .then(resolve)
-            .catch(() =>
-              reject(new Error(`${i18next.t("error.ytdlpExitedWithCode")} ${code}: ${stderr}`))
-            );
-          return;
-        }
-
         // BiliBili 412 时自动补充站点参数重试一次
         const is412 = stderr.includes("HTTP Error 412");
         const alreadyHasReferer = args.includes("--referer");
@@ -365,7 +353,7 @@ function getSiteArgs(url) {
 
 /**
  * 标准化 URL，处理特殊情况
- * - Vimeo: 将 vimeo.com/ID 转换为 player.vimeo.com/video/ID 以绕过登录限制
+ * - Vimeo: 将公开的 vimeo.com/ID 转换为兼容的播放器地址
  */
 function normalizeUrl(url) {
   try {

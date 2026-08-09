@@ -431,36 +431,6 @@ header {
   font-size: 12px;
 }
 
-.deps-source-control {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 150px;
-}
-
-.deps-source-select {
-  width: 100%;
-  max-width: none;
-  padding: 0 26px 0 8px;
-  border: 0;
-  background: transparent;
-  color: var(--fg2);
-  text-align: right;
-  text-align-last: right;
-  appearance: none;
-}
-
-.deps-source-control > img {
-  position: absolute;
-  right: 0;
-  pointer-events: none;
-  opacity: 0.45;
-}
-
-.deps-source-hint {
-  display: none;
-}
-
 #updateBanner {
   margin: 0 12px 8px;
   padding: 6px 8px;

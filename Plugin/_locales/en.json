@@ -1,7 +1,7 @@
 {
   "manifest": {
     "app": {
-      "name": "Media Downloader (Dev)"
+      "name": "Media Downloader"
     }
   },
   "ui": {
@@ -78,21 +78,19 @@
   "deps": {
     "title": "Settings",
     "engineTitle": "Download engine",
-    "advancedTitle": "Advanced",
     "setupRequired": "These components are required for first-time use. The main view will open automatically once setup is complete.",
     "back": "Back",
     "ytdlpDesc": "Video extraction & download engine",
     "ffmpegDesc": "Video merging & transcoding engine",
-    "ffmpegManaged": "Managed by Eagle, no action needed",
-    "ffmpegNotFoundHint": "Eagle built-in not found. Click below to install independently",
-    "ffmpegUnsupported": "Auto-install not supported on this platform. Please update Eagle to get ffmpeg",
+    "ffmpegManaged": "Managed and updated by Eagle",
+    "ffmpegNotFoundHint": "Install Eagle's official FFmpeg dependency to continue",
     "checking": "Checking...",
     "installed": "Installed",
     "checkingUpdate": "Checking for updates...",
     "latest": "Up to date",
     "outdated": "Update available",
     "missing": "Not installed",
-    "eagleBuiltin": "Eagle built-in",
+    "eagleBuiltin": "Managed by Eagle",
     "notFound": "Not found",
     "installing": "Installing...",
     "updating": "Updating...",
@@ -108,13 +106,6 @@
     "downloadFailed": "Download failed",
     "versionInstalled": "Version: {{version}}",
     "versionUpdate": "{{from}}  →  {{to}}",
-    "progressText": "Downloading... {{percent}}%",
-    "sourceLabel": "Download Source",
-    "sourceAuto": "Automatic",
-    "sourceMirror": "Mirror (Recommended for Mainland China)",
-    "sourceDirect": "GitHub Direct (if using a proxy/VPN)",
-    "sourceHintAuto": "Connects to GitHub directly first, automatically retrying via mirrors if it fails",
-    "sourceHintMirror": "Tries mirrors first for faster downloads in Mainland China, falling back to GitHub directly if needed",
-    "sourceHintDirect": "Always connects to GitHub directly without using any mirror — best if you already use a proxy/VPN"
+    "progressText": "Downloading... {{percent}}%"
   }
 }

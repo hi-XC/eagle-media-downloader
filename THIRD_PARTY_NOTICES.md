@@ -8,9 +8,9 @@ This project is distributed under the MIT License. It also uses or downloads the
 
 ## Runtime Dependencies
 
-The `.eagleplugin` package does not include yt-dlp or ffmpeg binaries. The plugin may use Eagle's built-in ffmpeg or download these tools at runtime when needed.
+The `.eagleplugin` package does not include yt-dlp or FFmpeg binaries.
 
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) is primarily published under The Unlicense. Some release executables contain components under additional licenses; refer to the license notices shipped with the selected yt-dlp release.
-- [FFmpeg](https://ffmpeg.org/) licensing depends on the selected build and configuration. On Windows, the optional fallback installer uses a GPL build published by [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds). On macOS, it may use a build provided by [eagle-app/eagle-plugin-ffmpeg](https://github.com/eagle-app/eagle-plugin-ffmpeg).
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) is downloaded from its official GitHub Release at runtime. The plugin pins the release version and verifies the downloaded executable with SHA-256 before use. yt-dlp is primarily published under The Unlicense. Some release executables contain components under additional licenses; refer to the notices included with the selected release.
+- [FFmpeg](https://ffmpeg.org/) is supplied through Eagle's official FFmpeg dependency plugin. Its license depends on the build and configuration distributed by Eagle.
 
 The third-party projects are independent of this repository. Their names and links are provided for attribution and license reference only.

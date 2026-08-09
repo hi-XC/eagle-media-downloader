@@ -1,4 +1,4 @@
-# Eagle Media Downloader
+# 素材下载助手（Media Downloader）
 
 [English](./README.en.md) | 中文
 
@@ -35,7 +35,7 @@
 
 | 已完成 | 设置 |
 | --- | --- |
-| ![显示已完成的下载项目](./docs/screenshots/completed.png) | ![下载引擎和下载源设置](./docs/screenshots/settings.png) |
+| ![显示已完成的下载项目](./docs/screenshots/completed.png) | ![下载引擎设置](./docs/screenshots/settings.png) |
 
 ## 安装
 
@@ -45,7 +45,7 @@
 2. 在 `Assets` 区域下载 `eagle-media-downloader-v0.1.0.eagleplugin`。
 3. 打开下载的安装包，并按照 Eagle 的提示完成安装。
 
-安装包不包含 `yt-dlp` 或 `ffmpeg`。首次运行时，插件会下载 `yt-dlp`。处理音视频时，插件优先使用 Eagle 内置的 `ffmpeg`。
+安装包不包含 `yt-dlp` 或 `ffmpeg`。首次运行时，插件从 yt-dlp 官方 GitHub Release 下载固定版本并校验文件完整性。FFmpeg 由 Eagle 官方依赖插件提供和管理。
 
 ## 使用
 
@@ -79,4 +79,4 @@ MIT 许可证仅适用于本项目代码，不授予任何第三方素材的版�
 
 项目由 XC 维护，基于 [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader) 开发。该上游项目源自 [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader)。感谢上游维护者及贡献者的工作。
 
-第三方组件和运行时依赖说明见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
+隐私处理方式见 [PRIVACY.md](./PRIVACY.md)。第三方组件和运行时依赖说明见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。

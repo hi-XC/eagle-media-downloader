@@ -1,18 +1,20 @@
 {
   "id": "442cc830-0156-4817-b37c-da79c4b45c04",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "platform": "all",
   "arch": "all",
   "name": "{{manifest.app.name}}",
   "logo": "assets/logo.png",
   "keywords": [
-    "video",
+    "media",
     "download",
-    "youtube",
-    "twitter",
     "instagram",
     "carousel",
-    "yt-dlp"
+    "image",
+    "video"
+  ],
+  "dependencies": [
+    "ffmpeg"
   ],
   "fallbackLanguage": "en",
   "languages": [

@@ -1,11 +1,11 @@
 {
   "manifest": {
     "app": {
-      "name": "媒体下载器（开发版）"
+      "name": "素材下载助手"
     }
   },
   "ui": {
-    "appTitle": "媒体下载器",
+    "appTitle": "素材下载助手",
     "inputPlaceholder": "粘贴帖子链接",
     "downloadBtn": "下载",
     "downloadingBtn": "下载中...",
@@ -78,21 +78,19 @@
   "deps": {
     "title": "设置",
     "engineTitle": "下载引擎",
-    "advancedTitle": "高级",
     "setupRequired": "首次使用需要先安装以下组件，安装完成后将自动进入主界面",
     "back": "返回",
     "ytdlpDesc": "视频解析与下载引擎",
     "ffmpegDesc": "视频合并与转码引擎",
-    "ffmpegManaged": "由 Eagle 管理，无需手动操作",
-    "ffmpegNotFoundHint": "未找到 Eagle 内置版本，可点击下方按钮独立安装",
-    "ffmpegUnsupported": "当前平台暂不支持自动安装，请更新 Eagle 至最新版以获取 ffmpeg",
+    "ffmpegManaged": "由 Eagle 负责管理和更新",
+    "ffmpegNotFoundHint": "需安装 Eagle 官方 FFmpeg 依赖后继续",
     "checking": "检查中...",
     "installed": "已安装",
     "checkingUpdate": "检查更新中...",
     "latest": "已是最新版",
     "outdated": "有新版本",
     "missing": "未安装",
-    "eagleBuiltin": "Eagle 内置",
+    "eagleBuiltin": "由 Eagle 管理",
     "notFound": "未找到",
     "installing": "安装中...",
     "updating": "更新中...",
@@ -108,13 +106,6 @@
     "downloadFailed": "下载失败",
     "versionInstalled": "版本：{{version}}",
     "versionUpdate": "{{from}}  →  {{to}}",
-    "progressText": "正在下载... {{percent}}%",
-    "sourceLabel": "下载源",
-    "sourceAuto": "自动",
-    "sourceMirror": "镜像加速（国内网络推荐）",
-    "sourceDirect": "GitHub 直连（已配置代理/VPN）",
-    "sourceHintAuto": "优先直连 GitHub，失败后自动切换镜像加速重试",
-    "sourceHintMirror": "优先通过国内镜像加速下载，失败后回退到 GitHub 直连",
-    "sourceHintDirect": "始终直连 GitHub，不使用任何镜像，适合已配置代理/VPN 的网络环境"
+    "progressText": "正在下载... {{percent}}%"
   }
 }

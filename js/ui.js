@@ -315,8 +315,8 @@ function setDepCardState(prefix, state) {
   cardEl.className = `dep-card state-${state}`;
   const hasMenu = prefix === "ytdlp"
     ? ["installed", "latest", "outdated", "done"].includes(state)
-    : ["installed", "done"].includes(state);
-  const showMore = hasMenu || (prefix === "ffmpeg" && state === "eagle");
+    : false;
+  const showMore = hasMenu;
   const moreButton = cardEl.querySelector(".dep-more-btn");
   cardEl.classList.toggle("more-visible", showMore);
   cardEl.classList.toggle("menu-enabled", hasMenu);
@@ -363,33 +363,18 @@ function getUpdateBannerEls() {
  * 显示依赖管理页面
  * @param {Object} opts
  * @param {boolean} opts.gating - 是否为「门槛模式」（依赖未就绪，强制停留在此页，隐藏返回按钮）
- * @param {'auto'|'mirror'|'direct'} opts.sourcePref - 当前下载源偏好
  */
-function showDepsPage({ gating = false, sourcePref = 'auto' } = {}) {
+function showDepsPage({ gating = false } = {}) {
   // 填充静态文本
   const notice = document.getElementById("depsNotice");
   const engineTitle = document.getElementById("depsEngineTitle");
-  const advancedTitle = document.getElementById("depsAdvancedTitle");
   const ytdlpDesc = document.getElementById("ytdlpDesc");
   const ffmpegDesc = document.getElementById("ffmpegDesc");
-  const sourceLabel = document.getElementById("depsSourceLabel");
-  const sourceSelect = document.getElementById("depsSourceSelect");
   document.getElementById("depsBackBtn")?.setAttribute("title", i18next.t("deps.back"));
   if (notice) notice.textContent = i18next.t("deps.setupRequired");
   if (engineTitle) engineTitle.textContent = i18next.t("deps.engineTitle");
-  if (advancedTitle) advancedTitle.textContent = i18next.t("deps.advancedTitle");
   if (ytdlpDesc) ytdlpDesc.textContent = i18next.t("deps.ytdlpDesc");
   if (ffmpegDesc) ffmpegDesc.textContent = i18next.t("deps.ffmpegDesc");
-  if (sourceLabel) sourceLabel.textContent = i18next.t("deps.sourceLabel");
-  if (sourceSelect) {
-    sourceSelect.innerHTML = `
-      <option value="auto">${i18next.t("deps.sourceAuto")}</option>
-      <option value="mirror">${i18next.t("deps.sourceMirror")}</option>
-      <option value="direct">${i18next.t("deps.sourceDirect")}</option>
-    `;
-    sourceSelect.value = sourcePref;
-  }
-  updateDownloadSourceHint(sourcePref);
 
   document.getElementById("depsContainer")?.classList.remove("hidden");
   document.getElementById("mainContainer")?.classList.add("hidden");
@@ -398,21 +383,6 @@ function showDepsPage({ gating = false, sourcePref = 'auto' } = {}) {
   closeDependencyMenus();
   const container = document.getElementById("depsContainer");
   if (container) container.scrollTop = 0;
-}
-
-/**
- * 更新下载源说明文案
- * @param {'auto'|'mirror'|'direct'} sourcePref
- */
-function updateDownloadSourceHint(sourcePref) {
-  const hintEl = document.getElementById("depsSourceHint");
-  if (!hintEl) return;
-  const key = {
-    auto: "deps.sourceHintAuto",
-    mirror: "deps.sourceHintMirror",
-    direct: "deps.sourceHintDirect",
-  }[sourcePref] || "deps.sourceHintAuto";
-  hintEl.textContent = i18next.t(key);
 }
 
 /**
@@ -539,8 +509,8 @@ function updateYtdlpCard(state, data = {}) {
 
 /**
  * 更新 ffmpeg 卡片状态
- * state: 'checking' | 'eagle' | 'installed' | 'missing' | 'busy' | 'done'
- * data: { version, statusText, percent, canInstall }
+ * state: 'checking' | 'eagle' | 'missing' | 'error'
+ * data: { version, message }
  */
 function updateFfmpegCard(state, data = {}) {
   const { statusEl, detailEl, progressWrap, progressFill, actionsEl } = getDepCardEls('ffmpeg');
@@ -559,7 +529,7 @@ function updateFfmpegCard(state, data = {}) {
       if (actionsEl) actionsEl.innerHTML = "";
       break;
 
-    // Eagle 内置版本：只读展示，不提供操作按钮
+    // Eagle 官方依赖：只读展示，不提供操作按钮
     case "eagle":
       statusEl.classList.add("ok");
       statusEl.textContent = i18next.t("deps.eagleBuiltin");
@@ -571,35 +541,13 @@ function updateFfmpegCard(state, data = {}) {
       if (actionsEl) actionsEl.innerHTML = "";
       break;
 
-    // 插件自管理版本：提供重装和卸载
-    case "installed":
-      statusEl.classList.add("ok");
-      statusEl.textContent = i18next.t("deps.latest");
-      if (detailEl) {
-        detailEl.textContent = data.version
-          ? i18next.t("deps.versionInstalled", { version: data.version })
-          : "";
-      }
-      if (actionsEl) actionsEl.innerHTML = `
-        <button class="dep-btn" data-ffmpeg-action="reinstall">${i18next.t("deps.reinstall")}</button>
-        <button class="dep-btn danger" data-ffmpeg-action="uninstall">${i18next.t("deps.uninstall")}</button>
-      `;
-      break;
-
-    // 未安装：根据平台决定是否显示安装按钮
     case "missing":
       statusEl.classList.add("missing");
       statusEl.textContent = i18next.t("deps.notFound");
-      if (detailEl) {
-        detailEl.textContent = data.canInstall
-          ? i18next.t("deps.ffmpegNotFoundHint")
-          : i18next.t("deps.ffmpegUnsupported");
-      }
-      if (actionsEl) {
-        actionsEl.innerHTML = data.canInstall ? `
-          <button class="dep-btn primary" data-ffmpeg-action="install">${i18next.t("deps.install")}</button>
-        ` : "";
-      }
+      if (detailEl) detailEl.textContent = i18next.t("deps.ffmpegNotFoundHint");
+      if (actionsEl) actionsEl.innerHTML = `
+        <button class="dep-btn primary" data-ffmpeg-action="install">${i18next.t("deps.install")}</button>
+      `;
       break;
 
     case "error":
@@ -607,34 +555,7 @@ function updateFfmpegCard(state, data = {}) {
       statusEl.textContent = i18next.t("deps.downloadFailed");
       if (detailEl) detailEl.textContent = data.message || "";
       if (actionsEl) actionsEl.innerHTML = `
-        <button class="dep-btn primary" data-ffmpeg-action="${data.retryAction || 'install'}">${i18next.t("deps.retry")}</button>
-      `;
-      break;
-
-    // 操作进行中：显示进度条
-    case "busy": {
-      statusEl.classList.add("busy");
-      statusEl.textContent = data.statusText || i18next.t("deps.installing");
-      const pct = Math.round(data.percent || 0);
-      if (detailEl) detailEl.textContent = i18next.t("deps.progressText", { percent: pct });
-      progressWrap?.classList.remove("hidden");
-      if (progressFill) progressFill.style.width = `${pct}%`;
-      if (actionsEl) actionsEl.innerHTML = "";
-      break;
-    }
-
-    // 操作完成：短暂展示后恢复真实状态
-    case "done":
-      statusEl.classList.add("ok");
-      statusEl.textContent = data.statusText || i18next.t("deps.doneInstalled");
-      if (detailEl) {
-        detailEl.textContent = data.version
-          ? i18next.t("deps.versionInstalled", { version: data.version })
-          : "";
-      }
-      if (actionsEl) actionsEl.innerHTML = `
-        <button class="dep-btn" data-ffmpeg-action="reinstall">${i18next.t("deps.reinstall")}</button>
-        <button class="dep-btn danger" data-ffmpeg-action="uninstall">${i18next.t("deps.uninstall")}</button>
+        <button class="dep-btn primary" data-ffmpeg-action="install">${i18next.t("deps.retry")}</button>
       `;
       break;
   }
@@ -707,7 +628,6 @@ module.exports = {
   showDepsPage,
   hideDepsPage,
   setDepsGating,
-  updateDownloadSourceHint,
   updateYtdlpCard,
   updateFfmpegCard,
 };
