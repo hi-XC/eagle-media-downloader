@@ -45,6 +45,7 @@ function showMainUI() {
 
 function setHeaderMode(mode) {
   const isSettings = mode === "settings";
+  document.getElementById("depsBackBtn")?.classList.toggle("hidden", !isSettings);
   document.getElementById("appLogo")?.classList.toggle("hidden", isSettings);
   document.getElementById("depsEntryBtn")?.classList.toggle("hidden", isSettings);
 
