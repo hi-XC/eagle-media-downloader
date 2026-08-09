@@ -2,50 +2,74 @@
 
 English | [中文](./README.md)
 
-> This is an independent development preview temporarily named Media Downloader. It is maintained by XC, based on fansanqiu's MIT-licensed project, and uses a separate Eagle plugin ID.
+Download images and videos from public posts directly into [Eagle](https://eagle.cool/). The current development preview focuses on Instagram posts and carousels while retaining the upstream project's yt-dlp-based video download support.
 
-Download videos directly to Eagle from 1000+ websites. Built on [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+**[Download v0.1.0 Development Preview](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)**
 
-## Supported Platforms
+> The current version has been tested on macOS with Eagle 4.0. Full Windows testing is still pending.
 
-YouTube, Twitter / X, TikTok, Bilibili, Instagram, Vimeo, and [many more](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).
+## Current Scope
+
+| Content | Status |
+| --- | --- |
+| Public Instagram posts | Images and videos supported |
+| Public Instagram carousels | Image-only, video-only, and mixed content supported |
+| Other yt-dlp video sites | Upstream support retained; not tested individually |
+| Private, login-required, or restricted content | Not supported |
+| Browser cookies | Not accessed |
 
 ## Features
 
-Supports 1000+ video websites. Downloads yt-dlp automatically on first run. Uses Eagle's built-in ffmpeg for audio/video merging. Automatically imports downloaded videos to Eagle with metadata. Supports Chinese and English interfaces with real-time progress display.
+- Imports carousel images and videos separately in their original order
+- Shows parsing status, overall progress, and current-item progress
+- Keeps successful items when an individual download fails
+- Imports completed media into Eagle with source information
+- Supports always-on-top mode, Chinese and English, and light and dark themes
+- Does not add platform tags automatically
 
-The development build adds Instagram post and carousel support. It preserves the original item order, supports image-only, video-only, and mixed carousels, and imports every item separately. It only handles public content available without login and does not read browser cookies.
+## Interface
+
+| Paste a Link | Download Progress |
+| --- | --- |
+| ![Idle interface](./docs/screenshots/idle.png) | ![Download progress](./docs/screenshots/downloading.png) |
+
+| Completed | Settings |
+| --- | --- |
+| ![Completed downloads](./docs/screenshots/completed.png) | ![Settings](./docs/screenshots/settings.png) |
 
 ## Installation
 
-Download the latest `.eagleplugin` package from [GitHub Releases](https://github.com/hi-XC/eagle-media-downloader/releases) and open it to install. Plugin Center installation will be added after Eagle review.
+Eagle 4.0 or higher and an internet connection are required.
 
-## First Run
+1. Open the [v0.1.0 release](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0).
+2. Under `Assets`, download `eagle-media-downloader-v0.1.0.eagleplugin`.
+3. Open the package and follow the Eagle installation prompt.
 
-On first launch the plugin automatically downloads yt-dlp (~30MB). ffmpeg uses Eagle's built-in version — no additional download required.
+The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads `yt-dlp`. It prefers Eagle's built-in `ffmpeg` when audio and video processing is required.
 
 ## Usage
 
-1. Copy a video link
-2. Paste it into the plugin input box
-3. Click the download button
-4. The video is automatically imported to Eagle after download
+1. Copy a public post link.
+2. Paste the link into the plugin input field.
+3. Click the download button.
+4. Wait for the media to be imported into Eagle.
 
 ## Development
 
 ```bash
-npm install      # Install dependencies
-npm run build    # Build plugin
-npm run dev      # Development mode (watch for changes)
+npm install
+npm test
+npm run build
+npm run package
 ```
 
-The project uses esbuild for bundling, i18next for internationalization, yt-dlp for video extraction, and Eagle's built-in ffmpeg.
+Source files are in `js/`, and the built Eagle plugin is in `Plugin/`. The project uses esbuild, i18next, and yt-dlp. See [ROADMAP.md](./ROADMAP.md) for planned work.
 
-## System Requirements
+## Support
 
-Eagle 4.0 or higher. Internet connection required.
+When opening a [GitHub Issue](https://github.com/hi-XC/eagle-media-downloader/issues), include the operating system, Eagle version, plugin version, and error message. Only provide a public post URL when it is safe to share publicly.
 
-## License
+## License and Usage
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for the complete copyright notices.
 
@@ -53,6 +77,6 @@ The software license does not grant rights to third-party media. Only download p
 
 ## Acknowledgements
 
-This project is based on [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader), which was derived from [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to both upstream maintainers and their contributors.
+Maintained by XC and based on [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader), which was derived from [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to the upstream maintainers and contributors.
 
 See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party components and runtime dependencies.
