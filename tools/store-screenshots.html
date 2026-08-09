@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 800px;
+      height: 600px;
+      margin: 0;
+      overflow: hidden;
+      background: #20212c;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 400px 400px;
+      grid-template-rows: 300px 300px;
+    }
+
+    iframe {
+      display: block;
+      width: 400px;
+      height: 300px;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <iframe data-state="idle" data-theme="dark" title="Input"></iframe>
+  <iframe data-state="downloading" data-theme="dark" title="Downloading"></iframe>
+  <iframe data-state="completed" data-theme="dark" title="Completed"></iframe>
+  <iframe data-state="settings" data-theme="light" title="Settings"></iframe>
+  <script>
+    const locale = new URLSearchParams(location.search).get("locale") || "en";
+    document.querySelectorAll("iframe").forEach((frame) => {
+      frame.src = `/?state=${frame.dataset.state}&theme=${frame.dataset.theme}&locale=${locale}`;
+    });
+  </script>
+</body>
+</html>

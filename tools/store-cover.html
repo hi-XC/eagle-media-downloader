@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 780px;
+      height: 520px;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      position: relative;
+      background: #f2f4f7;
+      color: #17181c;
+      font-family: Inter, -apple-system, "SF Pro Display", "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .accent {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 8px;
+      background: #3197ff;
+    }
+
+    .brand {
+      position: absolute;
+      top: 56px;
+      left: 64px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand img {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      box-shadow: 0 8px 22px rgba(27, 91, 171, 0.2);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      font-weight: 650;
+      letter-spacing: 0;
+      line-height: 44px;
+    }
+
+    .english-name {
+      margin: 3px 0 0;
+      color: rgba(23, 24, 28, 0.52);
+      font-size: 15px;
+      line-height: 20px;
+    }
+
+    .value {
+      position: absolute;
+      top: 145px;
+      left: 66px;
+      margin: 0;
+      color: rgba(23, 24, 28, 0.68);
+      font-size: 18px;
+      line-height: 26px;
+    }
+
+    .window {
+      position: absolute;
+      top: 190px;
+      left: 190px;
+      width: 400px;
+      height: 300px;
+      overflow: hidden;
+      background: #20212c;
+      border: 1px solid rgba(15, 20, 31, 0.16);
+      border-radius: 13px;
+      box-shadow: 0 24px 52px rgba(25, 33, 48, 0.24), 0 4px 12px rgba(25, 33, 48, 0.12);
+    }
+
+    iframe {
+      display: block;
+      width: 400px;
+      height: 300px;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="accent"></div>
+  <div class="brand">
+    <img src="/assets/logo.png" alt="" />
+    <div>
+      <h1 id="title"></h1>
+      <p id="englishName" class="english-name"></p>
+    </div>
+  </div>
+  <p id="value" class="value"></p>
+  <div class="window">
+    <iframe id="preview" title="Plugin preview"></iframe>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const locale = params.get("locale") || "zh_CN";
+    const zh = locale === "zh_CN";
+
+    document.documentElement.lang = zh ? "zh-CN" : "en";
+    document.getElementById("title").textContent = zh ? "素材下载助手" : "Media Downloader";
+    document.getElementById("englishName").textContent = zh ? "Media Downloader for Eagle" : "For Eagle";
+    document.getElementById("value").textContent = zh
+      ? "将公开帖子的图片与视频按原顺序导入 Eagle"
+      : "Import images and videos from public posts in their original order";
+    document.getElementById("preview").src = `/?state=downloading&theme=dark&locale=${locale}`;
+  </script>
+</body>
+</html>

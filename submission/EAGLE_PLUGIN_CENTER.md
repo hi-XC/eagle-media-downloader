@@ -1,6 +1,6 @@
 # Eagle 插件中心上架资料
 
-本文档用于准备 Eagle 插件中心首次审核。Windows 实机测试已完成，正式提交前仍需更新正式截图。
+本文档用于准备 Eagle 插件中心首次审核。Windows 实机测试、正式截图和封面图均已完成。
 
 ## 当前状态
 
@@ -10,8 +10,8 @@
 | macOS 测试 | 已完成基础验证 |
 | Windows 测试 | `0.2.2` 全部通过，可保留 `platform: all` |
 | 图标 | 512 x 512 PNG，已准备 |
-| 功能截图 | 已准备 4 张预览图；正式 2 倍分辨率版本待更新 |
-| 封面图 | 待按当前插件名称重制 |
+| 功能截图 | 中英文各 4 张，800 × 600 px，已完成 |
+| 封面图 | 中英文各 1 张，1560 × 1040 px，已完成 |
 | FFmpeg | 已改用 Eagle 官方依赖插件 |
 | yt-dlp | 固定版本、官方地址、SHA-256 校验 |
 | 隐私政策 | 已准备中英文版本 |
@@ -97,7 +97,7 @@ On first launch, the plugin downloads a pinned yt-dlp release from the official 
 
 1. 按 [Windows 实机测试清单](./WINDOWS_TEST.md) 完成测试并记录结果。
 2. Windows 测试通过后，保留 `platform: all`；未通过时，首版改为仅支持 macOS。
-3. 在安装了正式包的 Eagle 中重新截取主界面、下载中、完成和设置页。
+3. 上传 `submission/assets` 中对应语言的封面图和功能截图。
 4. 确认隐私政策和支持链接可以公开访问。
 5. 使用 Eagle 的「Pack Plugin」生成最终 `.eagleplugin` 文件。
 6. 在干净环境中安装最终包，完成首次依赖安装和完整下载测试。
