@@ -104,6 +104,7 @@
     "uninstall": "Uninstall",
     "retry": "Retry",
     "downloadFailed": "Download failed",
+    "pluginVersion": "Version {{version}}",
     "versionInstalled": "Version: {{version}}",
     "versionUpdate": "{{from}}  →  {{to}}",
     "progressText": "Downloading... {{percent}}%"

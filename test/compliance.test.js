@@ -28,3 +28,11 @@ test("includes reviewer, privacy, and third-party notices in the package", () =>
     assert.equal(fs.existsSync(path.join(root, relativePath)), true, `${relativePath} is missing`);
   }
 });
+
+test("defines visible light palettes for Eagle theme changes", () => {
+  const css = read("Plugin/styles/ui-refresh.css");
+
+  assert.match(css, /html\[theme="light"\]\s*{/);
+  assert.match(css, /html\[theme="lightgray"\]\s*{/);
+  assert.match(css, /--fg1:\s*rgba\(0, 0, 0,/);
+});

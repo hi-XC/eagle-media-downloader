@@ -1,13 +1,13 @@
 # Windows 实机测试清单
 
-本清单用于确认 Media Downloader `0.2.1` 能否在 Windows 版 Eagle 中公开发布。测试不需要使用终端或输入命令。
+本清单用于确认 Media Downloader `0.2.2` 能否在 Windows 版 Eagle 中公开发布。测试不需要使用终端或输入命令。
 
 ## 测试前准备
 
 - 一台 Windows 10 或 Windows 11 电脑，建议使用 x64 处理器。
 - Eagle 4.0 或更高版本。
 - 一个临时 Eagle 素材库。不要直接使用重要的正式素材库。
-- `media-downloader-v0.2.1.eagleplugin` 测试包。
+- `media-downloader-v0.2.2.eagleplugin` 测试包。
 - 至少三个无需登录即可打开的 Instagram 链接：单张图片或单个视频、纯图片 Carousel、图片和视频混合 Carousel。
 
 测试期间，不要关闭 Windows Defender，不要输入 Instagram 账号，不要导入浏览器 Cookie。如果系统要求关闭安全功能、输入账号或提供 Cookie，请停止测试并截图。
@@ -21,7 +21,7 @@
 ## 安装插件
 
 1. 将测试包传到 Windows 电脑。
-2. 双击 `media-downloader-v0.2.1.eagleplugin`。
+2. 双击 `media-downloader-v0.2.2.eagleplugin`。
 3. 按照 Eagle 的提示安装或更新插件。
 4. 如果 Eagle 提示安装 FFmpeg 依赖，请允许 Eagle 安装。
 5. 在 Eagle 插件列表中确认名称显示为 `Media Downloader`；中文环境应显示为「素材下载助手」。
@@ -35,7 +35,8 @@
 3. 打开右上角的设置页面。
 4. 检查 yt-dlp 是否显示版本 `2026.07.04` 和「已是最新版」。
 5. 检查 FFmpeg 是否显示「由 Eagle 管理」。
-6. 截取设置页面。
+6. 检查设置页底部是否显示插件版本 `0.2.2`。
+7. 截取设置页面。
 
 如果 yt-dlp 下载失败，请保留页面，不要反复安装。记录错误文字并截图。
 
@@ -90,7 +91,7 @@
 Windows 版本：
 系统类型：
 Eagle 版本：
-插件版本：0.2.1
+插件版本：0.2.2
 Eagle 语言和主题：
 
 安装插件：通过 / 失败

@@ -35,6 +35,12 @@ function updateAlwaysOnTopButton(isPinned) {
   button.title = i18next.t(isPinned ? "window.unpin" : "window.pin");
 }
 
+function setPluginVersion(version) {
+  const versionEl = document.getElementById("pluginVersion");
+  if (!versionEl || !version) return;
+  versionEl.textContent = i18next.t("deps.pluginVersion", { version });
+}
+
 /**
  * 显示主 UI
  */
@@ -612,6 +618,7 @@ function hideUpdateBanner() {
 module.exports = {
   updateTheme,
   updateAlwaysOnTopButton,
+  setPluginVersion,
   showMainUI,
   setupDependencyMenus,
   isValidUrl,

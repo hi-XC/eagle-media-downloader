@@ -1,12 +1,52 @@
 :root {
   --bg1: #20212c;
   --bg2: #414250;
+  --bg3: #000000;
   --bg-panel: #343541;
   --bg-menu: #2a2b36;
   --fg1: rgba(255, 255, 255, 0.94);
   --fg2: rgba(255, 255, 255, 0.58);
   --fg3: rgba(255, 255, 255, 0.38);
   --line: rgba(255, 255, 255, 0.08);
+  --track: rgba(255, 255, 255, 0.1);
+  --control: rgba(255, 255, 255, 0.08);
+  --control-hover: rgba(255, 255, 255, 0.15);
+  --scrollbar: rgba(255, 255, 255, 0.15);
+  color-scheme: dark;
+}
+
+html[theme="light"] {
+  --bg1: #f7f7f8;
+  --bg2: #e7e7eb;
+  --bg3: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-menu: #ffffff;
+  --fg1: rgba(0, 0, 0, 0.88);
+  --fg2: rgba(0, 0, 0, 0.56);
+  --fg3: rgba(0, 0, 0, 0.38);
+  --line: rgba(0, 0, 0, 0.09);
+  --track: rgba(0, 0, 0, 0.1);
+  --control: rgba(0, 0, 0, 0.06);
+  --control-hover: rgba(0, 0, 0, 0.11);
+  --scrollbar: rgba(0, 0, 0, 0.18);
+  color-scheme: light;
+}
+
+html[theme="lightgray"] {
+  --bg1: #ececef;
+  --bg2: #dedfe4;
+  --bg3: #ffffff;
+  --bg-panel: #f8f8f9;
+  --bg-menu: #ffffff;
+  --fg1: rgba(0, 0, 0, 0.88);
+  --fg2: rgba(0, 0, 0, 0.56);
+  --fg3: rgba(0, 0, 0, 0.38);
+  --line: rgba(0, 0, 0, 0.09);
+  --track: rgba(0, 0, 0, 0.1);
+  --control: rgba(0, 0, 0, 0.06);
+  --control-hover: rgba(0, 0, 0, 0.11);
+  --scrollbar: rgba(0, 0, 0, 0.18);
+  color-scheme: light;
 }
 
 header {
@@ -50,6 +90,17 @@ header {
 .btn-close:hover,
 .btn-icon:hover {
   opacity: 0.9;
+}
+
+html[theme="light"] .btn-icon > img,
+html[theme="light"] .btn-close > img,
+html[theme="light"] .dep-more-btn > img,
+html[theme="light"] #addButton.disabled > img,
+html[theme="lightgray"] .btn-icon > img,
+html[theme="lightgray"] .btn-close > img,
+html[theme="lightgray"] .dep-more-btn > img,
+html[theme="lightgray"] #addButton.disabled > img {
+  filter: brightness(0);
 }
 
 .header-back {
@@ -263,6 +314,16 @@ header {
 #depsContainer {
   padding: 8px 12px 12px;
   overflow-y: auto;
+}
+
+.plugin-version {
+  margin-top: auto;
+  padding: 12px 0 0;
+  color: var(--fg3);
+  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
 }
 
 .deps-notice {

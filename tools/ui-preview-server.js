@@ -10,6 +10,7 @@ const mockScript = `
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const state = new URLSearchParams(location.search).get("state") || "idle";
+  const theme = new URLSearchParams(location.search).get("theme") || "dark";
   const appName = document.getElementById("appName");
   const main = document.getElementById("mainContainer");
   const deps = document.getElementById("depsContainer");
@@ -17,6 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const settings = document.getElementById("depsEntryBtn");
   const back = document.getElementById("depsBackBtn");
   const input = document.getElementById("urlInput");
+
+  document.documentElement.setAttribute("theme", theme);
 
   appName.textContent = "Media Downloader";
   input.placeholder = "Paste a post link";
@@ -31,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("depsEngineTitle").textContent = "Download engine";
     document.getElementById("ytdlpDesc").textContent = "Video extraction & download engine";
     document.getElementById("ffmpegDesc").textContent = "Video merging & transcoding engine";
+    document.getElementById("pluginVersion").textContent = "Version 0.2.2";
 
     const setDependency = (prefix, status, detail, hasMenu) => {
       document.getElementById(prefix + "Status").textContent = status;

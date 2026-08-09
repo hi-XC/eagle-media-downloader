@@ -77,6 +77,7 @@ function applyTranslations() {
 eagle.onPluginCreate(async (plugin) => {
   await initI18n();
   applyTranslations();
+  ui.setPluginVersion(plugin?.manifest?.version);
   ui.updateTheme();
   setupEventListeners();
   await initializeAlwaysOnTop();
