@@ -2,57 +2,57 @@
 
 English | [中文](./README.md)
 
-Download images and videos from public posts directly into [Eagle](https://eagle.cool/). The current development preview focuses on Instagram posts and carousels while retaining the upstream project's yt-dlp-based video download support.
+Download images and videos from public posts directly into [Eagle](https://eagle.cool/). The current development preview focuses on public Instagram posts, including image posts, video posts, and carousels. Video download support for other sites is inherited from the upstream yt-dlp-based project and has not been tested individually.
 
 **[Download v0.1.0 Development Preview](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)**
 
-> The current version has been tested on macOS with Eagle 4.0. Full Windows testing is still pending.
+> Tested with macOS and Eagle 4.0. Full Windows testing is still pending.
 
-## Current Scope
+## Supported Content
 
 | Content | Status |
 | --- | --- |
-| Public Instagram posts | Images and videos supported |
-| Public Instagram carousels | Image-only, video-only, and mixed content supported |
-| Other yt-dlp video sites | Upstream support retained; not tested individually |
-| Private, login-required, or restricted content | Not supported |
+| Public Instagram image or video posts | Supported |
+| Public Instagram carousel posts | Image-only, video-only, and mixed-media carousels supported |
+| Other video sites supported by yt-dlp | Upstream capability retained; not tested individually in this release |
+| Private, login-required, or access-restricted content | Not supported |
 | Browser cookies | Not accessed |
 
 ## Features
 
-- Imports carousel images and videos separately in their original order
-- Shows parsing status, overall progress, and current-item progress
-- Keeps successful items when an individual download fails
-- Imports completed media into Eagle with source information
-- Supports always-on-top mode, Chinese and English, and light and dark themes
-- Does not add platform tags automatically
+- Imports every image and video separately in the original post order
+- Shows post parsing status, overall progress, and current-item progress
+- Keeps other successful downloads when an individual item fails
+- Imports completed media into Eagle and records source information
+- Supports always-on-top mode, Chinese and English interfaces, and light and dark themes
+- Does not add platform tags automatically during import
 
 ## Interface
 
-| Paste a Link | Download Progress |
+| Paste a Link | Downloading |
 | --- | --- |
-| ![Idle interface](./docs/screenshots/idle.png) | ![Download progress](./docs/screenshots/downloading.png) |
+| ![Waiting for a post link](./docs/screenshots/idle.png) | ![Current item and overall download progress](./docs/screenshots/downloading.png) |
 
 | Completed | Settings |
 | --- | --- |
-| ![Completed downloads](./docs/screenshots/completed.png) | ![Settings](./docs/screenshots/settings.png) |
+| ![Completed downloads](./docs/screenshots/completed.png) | ![Download engine and source settings](./docs/screenshots/settings.png) |
 
 ## Installation
 
-Eagle 4.0 or higher and an internet connection are required.
+Requirements: Eagle 4.0 or higher and an internet connection.
 
-1. Open the [v0.1.0 release](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0).
+1. Open the [v0.1.0 release page](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0).
 2. Under `Assets`, download `eagle-media-downloader-v0.1.0.eagleplugin`.
-3. Open the package and follow the Eagle installation prompt.
+3. Open the downloaded package and follow the Eagle installation prompt.
 
-The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads `yt-dlp`. It prefers Eagle's built-in `ffmpeg` when audio and video processing is required.
+The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads `yt-dlp`. When processing audio and video, the plugin prefers Eagle's built-in `ffmpeg`.
 
 ## Usage
 
-1. Copy a public post link.
+1. Copy a post link that is accessible without signing in.
 2. Paste the link into the plugin input field.
 3. Click the download button.
-4. Wait for the media to be imported into Eagle.
+4. Wait for the plugin to import the media into Eagle.
 
 ## Development
 
@@ -67,16 +67,16 @@ Source files are in `js/`, and the built Eagle plugin is in `Plugin/`. The proje
 
 ## Support
 
-When opening a [GitHub Issue](https://github.com/hi-XC/eagle-media-downloader/issues), include the operating system, Eagle version, plugin version, and error message. Only provide a public post URL when it is safe to share publicly.
+Open an issue through [GitHub Issues](https://github.com/hi-XC/eagle-media-downloader/issues). Include the operating system, Eagle version, plugin version, and error message. Only provide the original post link when the link and its content may be shared publicly.
 
 ## License and Usage
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for the complete copyright notices.
 
-The software license does not grant rights to third-party media. Only download public media that you are authorized to save and use, and comply with applicable platform terms and laws.
+The MIT License applies only to this project's code. It does not grant copyright or usage rights for third-party media. Only download public media that you are authorized to save and use, and comply with applicable platform terms and laws.
 
 ## Acknowledgements
 
-Maintained by XC and based on [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader), which was derived from [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to the upstream maintainers and contributors.
+Maintained by XC and based on [fansanqiu/eagle-video-downloader](https://github.com/fansanqiu/eagle-video-downloader). That upstream project was derived from [OlivierEstevez/eagle-twitter-video-downloader](https://github.com/OlivierEstevez/eagle-twitter-video-downloader). Thanks to the upstream maintainers and contributors.
 
 See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for third-party components and runtime dependencies.
