@@ -2,9 +2,9 @@
 
 English | [中文](./README.md)
 
-Download images and videos from public posts directly into [Eagle](https://eagle.cool/). The current development preview focuses on public Instagram posts, including image posts, video posts, and carousels. Video download support for other sites is inherited from the upstream yt-dlp-based project and has not been tested individually.
+Download images and videos from public posts directly into [Eagle](https://eagle.cool/). The current version focuses on public Instagram posts, including image posts, video posts, and carousels. Video download support for other sites is inherited from the upstream yt-dlp-based project and has not been tested individually.
 
-**[Download v0.1.0 Development Preview](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)**
+**Current version: v0.2.2 (Eagle Plugin Center submission candidate)**
 
 > Tested with Eagle 4.0 on macOS and Windows.
 
@@ -31,19 +31,19 @@ Download images and videos from public posts directly into [Eagle](https://eagle
 
 | Paste a Link | Downloading |
 | --- | --- |
-| ![Waiting for a post link](./docs/screenshots/idle.png) | ![Current item and overall download progress](./docs/screenshots/downloading.png) |
+| ![Waiting for a post link](./docs/screenshots/idle.png?v=0.2.2) | ![Current item and overall download progress](./docs/screenshots/downloading.png?v=0.2.2) |
 
 | Completed | Settings |
 | --- | --- |
-| ![Completed downloads](./docs/screenshots/completed.png) | ![Download engine settings](./docs/screenshots/settings.png) |
+| ![Completed downloads](./docs/screenshots/completed.png?v=0.2.2) | ![Download engine settings](./docs/screenshots/settings.png?v=0.2.2) |
 
 ## Installation
 
 Requirements: Eagle 4.0 or higher and an internet connection.
 
-1. Open the [v0.1.0 release page](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0).
-2. Under `Assets`, download `eagle-media-downloader-v0.1.0.eagleplugin`.
-3. Open the downloaded package and follow the Eagle installation prompt.
+`v0.2.2` is being prepared for submission to the Eagle Plugin Center. A public download link will be added with the first formal GitHub Release.
+
+Developers can clone this repository, run `npm run package`, and open the generated `.eagleplugin` file to install it through Eagle.
 
 The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads a pinned version from the official yt-dlp GitHub Release and verifies its integrity. FFmpeg is provided and managed through Eagle's official dependency plugin.
 

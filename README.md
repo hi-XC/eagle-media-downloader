@@ -2,9 +2,9 @@
 
 [English](./README.en.md) | 中文
 
-用于将公开帖子中的图片和视频下载并导入 [Eagle](https://cn.eagle.cool/)。当前开发预览版重点支持 Instagram 公开图片帖、视频帖和轮播帖（Carousel）。其他网站的视频下载能力继承自基于 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 的上游项目，尚未逐一验证。
+用于将公开帖子中的图片和视频下载并导入 [Eagle](https://cn.eagle.cool/)。当前版本重点支持 Instagram 公开图片帖、视频帖和轮播帖（Carousel）。其他网站的视频下载能力继承自基于 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 的上游项目，尚未逐一验证。
 
-**[下载 v0.1.0 开发预览版](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)**
+**当前版本：v0.2.2（Eagle 插件中心上架候选版）**
 
 > 已在 macOS 和 Windows 版 Eagle 4.0 中完成实机测试。
 
@@ -31,19 +31,19 @@
 
 | 输入链接 | 正在下载 |
 | --- | --- |
-| ![等待输入帖子链接](./docs/screenshots/idle.png) | ![显示当前素材和总体下载进度](./docs/screenshots/downloading.png) |
+| ![等待输入帖子链接](./docs/screenshots/idle.png?v=0.2.2) | ![显示当前素材和总体下载进度](./docs/screenshots/downloading.png?v=0.2.2) |
 
 | 已完成 | 设置 |
 | --- | --- |
-| ![显示已完成的下载项目](./docs/screenshots/completed.png) | ![下载引擎设置](./docs/screenshots/settings.png) |
+| ![显示已完成的下载项目](./docs/screenshots/completed.png?v=0.2.2) | ![下载引擎设置](./docs/screenshots/settings.png?v=0.2.2) |
 
 ## 安装
 
 环境要求：Eagle 4.0 或更高版本，并保持网络连接。
 
-1. 打开 [v0.1.0 发布页面](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)。
-2. 在 `Assets` 区域下载 `eagle-media-downloader-v0.1.0.eagleplugin`。
-3. 打开下载的安装包，并按照 Eagle 的提示完成安装。
+`v0.2.2` 正在准备提交 Eagle 插件中心，公开下载地址将在首个正式 Release 发布后补充。
+
+开发者可以克隆本仓库并运行 `npm run package` 生成安装包，再打开 `.eagleplugin` 文件并按照 Eagle 的提示完成安装。
 
 安装包不包含 `yt-dlp` 或 `ffmpeg`。首次运行时，插件从 yt-dlp 官方 GitHub Release 下载固定版本并校验文件完整性。FFmpeg 由 Eagle 官方依赖插件提供和管理。
 
