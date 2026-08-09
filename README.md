@@ -6,7 +6,7 @@
 
 **[下载 v0.1.0 开发预览版](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)**
 
-> 测试环境：macOS、Eagle 4.0。Windows 尚未完成完整测试。
+> 已在 macOS 和 Windows 版 Eagle 4.0 中完成实机测试。
 
 ## 支持范围
 

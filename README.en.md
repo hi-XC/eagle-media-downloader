@@ -6,7 +6,7 @@ Download images and videos from public posts directly into [Eagle](https://eagle
 
 **[Download v0.1.0 Development Preview](https://github.com/hi-XC/eagle-media-downloader/releases/tag/v0.1.0)**
 
-> Tested with macOS and Eagle 4.0. Full Windows testing is still pending.
+> Tested with Eagle 4.0 on macOS and Windows.
 
 ## Supported Content
 
