@@ -9,6 +9,7 @@
 | 插件功能 | 可用，重点支持 Instagram 公开帖子和 Carousel |
 | macOS 测试 | 已完成基础验证 |
 | Windows 测试 | `0.2.2` 全部通过，可保留 `platform: all` |
+| 最终上架包 | `media-downloader-v0.2.2.eagleplugin`，已通过完整性检查 |
 | 图标 | 512 x 512 PNG，已准备 |
 | 功能截图 | 中英文各 4 张，800 × 600 px，已完成 |
 | 封面图 | 中英文各 1 张，1560 × 1040 px，已完成 |
