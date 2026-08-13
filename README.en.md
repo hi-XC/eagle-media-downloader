@@ -2,9 +2,9 @@
 
 English | [中文](./README.md)
 
-Download images and videos from public posts directly into [Eagle](https://eagle.cool/). The current version focuses on public Instagram posts, including image posts, video posts, and carousels. Video download support for other sites is inherited from the upstream yt-dlp-based project and has not been tested individually.
+Import publicly accessible Instagram image posts, video posts, and carousels into [Eagle](https://eagle.cool/). This release accepts only `https://instagram.com/p/<shortcode>` post URLs and valid Instagram subdomains.
 
-**Current version: v0.2.2 (Eagle Plugin Center submission candidate)**
+**Current version: v0.2.3 (Eagle Plugin Center resubmission candidate)**
 
 > Tested with Eagle 4.0 on macOS and Windows.
 
@@ -14,13 +14,13 @@ Download images and videos from public posts directly into [Eagle](https://eagle
 | --- | --- |
 | Public Instagram image or video posts | Supported |
 | Public Instagram carousel posts | Image-only, video-only, and mixed-media carousels supported |
-| Other video sites supported by yt-dlp | Upstream capability retained; not tested individually in this release |
+| Instagram Reels, Stories, or other websites | Not supported |
 | Private, login-required, or access-restricted content | Not supported |
 | Browser cookies | Not accessed |
 
 ## Features
 
-- Imports every image and video separately in the original post order
+- Imports each accessible image and video as a separate item
 - Shows post parsing status, overall progress, and current-item progress
 - Keeps other successful downloads when an individual item fails
 - Imports completed media into Eagle and records source information
@@ -31,25 +31,25 @@ Download images and videos from public posts directly into [Eagle](https://eagle
 
 | Paste a Link | Downloading |
 | --- | --- |
-| ![Waiting for a post link](./docs/screenshots/idle.png?v=0.2.2) | ![Current item and overall download progress](./docs/screenshots/downloading.png?v=0.2.2) |
+| ![Waiting for a post link](./docs/screenshots/idle.png?v=0.2.3) | ![Current item and overall download progress](./docs/screenshots/downloading.png?v=0.2.3) |
 
 | Completed | Settings |
 | --- | --- |
-| ![Completed downloads](./docs/screenshots/completed.png?v=0.2.2) | ![Download engine settings](./docs/screenshots/settings.png?v=0.2.2) |
+| ![Completed downloads](./docs/screenshots/completed.png?v=0.2.3) | ![Download engine settings](./docs/screenshots/settings.png?v=0.2.3) |
 
 ## Installation
 
 Requirements: Eagle 4.0 or higher and an internet connection.
 
-`v0.2.2` is being prepared for submission to the Eagle Plugin Center. A public download link will be added with the first formal GitHub Release.
+`v0.2.3` is being prepared for resubmission to the Eagle Plugin Center. A public download link will be added with the first formal GitHub Release.
 
 Developers can clone this repository, run `npm run package`, and open the generated `.eagleplugin` file to install it through Eagle.
 
-The package does not include `yt-dlp` or `ffmpeg`. On first launch, the plugin downloads a pinned version from the official yt-dlp GitHub Release and verifies its integrity. FFmpeg is provided and managed through Eagle's official dependency plugin.
+The package does not include `yt-dlp` or `ffmpeg`. On first use, the settings page checks both dependencies. If `yt-dlp` is missing, select Install to download a pinned release from the official yt-dlp GitHub repository and verify its SHA-256 checksum. If FFmpeg is missing, install Eagle's official FFmpeg dependency. The main view becomes available after both components are ready.
 
 ## Usage
 
-1. Copy a post link that is accessible without signing in.
+1. Copy a public Instagram post link that is accessible without signing in.
 2. Paste the link into the plugin input field.
 3. Click the download button.
 4. Wait for the plugin to import the media into Eagle.

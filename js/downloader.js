@@ -6,47 +6,21 @@
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const https = require("https");
 const { spawn } = require("child_process");
 
 const { getYtDlpPath, getFfmpegPath, BIN_DIR, downloadYtDlp } = require("./binary");
+const {
+  canonicalizeInstagramPostUrl,
+  isAllowedInstagramMediaUrl,
+  isInstagramPostUrl,
+  resolveInstagramRedirect,
+} = require("./url-policy");
 
-const INSTAGRAM_HOSTS = ["instagram.com"];
-const INSTAGRAM_MEDIA_HOSTS = ["cdninstagram.com", "fbcdn.net"];
 const PROGRESS_PREFIX = "__EAGLE_PROGRESS__";
 const INSTAGRAM_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-function matchesDomain(hostname, domains) {
-  const host = hostname.toLowerCase();
-  return domains.some((domain) => host === domain || host.endsWith(`.${domain}`));
-}
-
-function isInstagramPostUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return matchesDomain(parsed.hostname, INSTAGRAM_HOSTS) && /^\/p\/[^/]+/.test(parsed.pathname);
-  } catch (error) {
-    return false;
-  }
-}
-
-function canonicalizeInstagramPostUrl(url) {
-  const parsed = new URL(url);
-  parsed.search = "";
-  parsed.hash = "";
-  if (!parsed.pathname.endsWith("/")) parsed.pathname += "/";
-  return parsed.toString();
-}
-
-function isAllowedInstagramMediaUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:" && matchesDomain(parsed.hostname, INSTAGRAM_MEDIA_HOSTS);
-  } catch (error) {
-    return false;
-  }
-}
 
 function selectInstagramImageUrl(entry) {
   const candidates = [
@@ -57,8 +31,8 @@ function selectInstagramImageUrl(entry) {
 }
 
 function buildInstagramCollectionInfo(info, sourceUrl) {
-  const entries = (info.entries || []).filter(Boolean);
-  if (entries.length === 0) return null;
+  const listedEntries = (info.entries || []).filter(Boolean);
+  const entries = listedEntries.length > 0 ? listedEntries : [info];
 
   const title = info.title || info.playlist_title || i18next.t("error.untitledVideo");
   const description = info.description || "";
@@ -98,6 +72,154 @@ function buildInstagramCollectionInfo(info, sourceUrl) {
     id: info.id || null,
     items,
   };
+}
+
+function invalidInstagramUrlError() {
+  return new Error(i18next.t("error.invalidUrl"));
+}
+
+function validateYtDlpArgs(args) {
+  let sourceCount = 0;
+
+  for (let index = 0; index < args.length; index++) {
+    const value = args[index];
+    if (value === "--referer") {
+      if (args[index + 1] !== "https://www.instagram.com/") {
+        throw invalidInstagramUrlError();
+      }
+      index++;
+      continue;
+    }
+
+    if (typeof value === "string" && /^https?:\/\//i.test(value)) {
+      if (!isInstagramPostUrl(value)) throw invalidInstagramUrlError();
+      sourceCount++;
+    }
+  }
+
+  if (sourceCount !== 1) throw invalidInstagramUrlError();
+}
+
+function getElectronNet() {
+  try {
+    const electron = require("electron");
+    return electron.net || electron.remote?.net || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function verifyWithElectronNet(requestUrl, electronNet) {
+  return new Promise((resolve, reject) => {
+    let currentUrl = requestUrl;
+    let redirectCount = 0;
+    let settled = false;
+
+    const request = electronNet.request({
+      method: "GET",
+      url: requestUrl,
+      redirect: "manual",
+      useSessionCookies: false,
+      headers: {
+        "User-Agent": INSTAGRAM_USER_AGENT,
+        Range: "bytes=0-0",
+      },
+    });
+
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error) reject(error);
+      else resolve(currentUrl);
+    };
+
+    const timer = setTimeout(() => {
+      request.abort();
+      finish(new Error(i18next.t("error.redirectCheckFailed")));
+    }, 20000);
+
+    request.on("redirect", (_statusCode, _method, redirectUrl) => {
+      try {
+        redirectCount++;
+        if (redirectCount > 5) throw invalidInstagramUrlError();
+        currentUrl = resolveInstagramRedirect(currentUrl, redirectUrl);
+        request.followRedirect();
+      } catch (error) {
+        request.abort();
+        finish(invalidInstagramUrlError());
+      }
+    });
+    request.on("response", (response) => {
+      response.destroy?.();
+      finish();
+    });
+    request.on("error", (error) => finish(error));
+    request.end();
+  });
+}
+
+function verifyWithNodeHttps(requestUrl, redirectsRemaining = 5, visited = new Set()) {
+  if (visited.has(requestUrl) || redirectsRemaining < 0) {
+    return Promise.reject(invalidInstagramUrlError());
+  }
+  visited.add(requestUrl);
+
+  return new Promise((resolve, reject) => {
+    const request = https.request(requestUrl, {
+      method: "GET",
+      headers: {
+        "User-Agent": INSTAGRAM_USER_AGENT,
+        Range: "bytes=0-0",
+      },
+    }, (response) => {
+      const status = response.statusCode || 0;
+      const location = response.headers.location;
+      response.destroy();
+
+      if (status >= 300 && status < 400) {
+        if (!location) {
+          reject(invalidInstagramUrlError());
+          return;
+        }
+
+        let nextUrl;
+        try {
+          nextUrl = resolveInstagramRedirect(requestUrl, location);
+        } catch (error) {
+          reject(invalidInstagramUrlError());
+          return;
+        }
+
+        verifyWithNodeHttps(nextUrl, redirectsRemaining - 1, visited)
+          .then(resolve)
+          .catch(reject);
+        return;
+      }
+
+      resolve(requestUrl);
+    });
+
+    request.setTimeout(20000, () => {
+      request.destroy(new Error(i18next.t("error.redirectCheckFailed")));
+    });
+    request.on("error", reject);
+    request.end();
+  });
+}
+
+function verifyInstagramRedirectChain(url) {
+  let requestUrl;
+  try {
+    requestUrl = canonicalizeInstagramPostUrl(url);
+  } catch (error) {
+    return Promise.reject(invalidInstagramUrlError());
+  }
+
+  const electronNet = getElectronNet();
+  return electronNet
+    ? verifyWithElectronNet(requestUrl, electronNet)
+    : verifyWithNodeHttps(requestUrl);
 }
 
 /**
@@ -225,6 +347,13 @@ function createThumbnailProgressOutputHandler(onProgress, items, offset, total) 
  */
 function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
   return new Promise((resolve, reject) => {
+    try {
+      validateYtDlpArgs(args);
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
     const ytdlp = getYtDlpPath();
 
     if (!fs.existsSync(ytdlp)) {
@@ -304,22 +433,6 @@ function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
       if (code === 0) {
         resolve(stdout);
       } else {
-        // BiliBili 412 时自动补充站点参数重试一次
-        const is412 = stderr.includes("HTTP Error 412");
-        const alreadyHasReferer = args.includes("--referer");
-        if (is412 && !alreadyHasReferer) {
-          const urlArg = args.find(a => a.startsWith('http'));
-          const extraArgs = urlArg ? getSiteArgs(urlArg) : [];
-          if (extraArgs.length > 0) {
-            execYtDlp([...args, ...extraArgs], onProgress, onOutput)
-              .then(resolve)
-              .catch(() =>
-                reject(new Error(`${i18next.t("error.ytdlpExitedWithCode")} ${code}: ${stderr}`))
-              );
-            return;
-          }
-        }
-
         reject(
           new Error(`${i18next.t("error.ytdlpExitedWithCode")} ${code}: ${stderr}`),
         );
@@ -328,103 +441,37 @@ function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
   });
 }
 
-/**
- * 返回特定站点需要的额外 yt-dlp 参数
- * BiliBili：补充 Referer 和 User-Agent，避免 HTTP 412
- */
-function getSiteArgs(url) {
-  try {
-    const host = new URL(url).hostname.replace(/^www\./, '');
-    if (host === 'bilibili.com' || host === 'b23.tv') {
-      return [
-        '--referer', 'https://www.bilibili.com',
-        '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      ];
-    }
-    if (matchesDomain(host, INSTAGRAM_HOSTS)) {
-      return [
-        '--referer', 'https://www.instagram.com/',
-        '--add-header', `User-Agent:${INSTAGRAM_USER_AGENT}`,
-      ];
-    }
-  } catch (e) {}
-  return [];
-}
-
-/**
- * 标准化 URL，处理特殊情况
- * - Vimeo: 将公开的 vimeo.com/ID 转换为兼容的播放器地址
- */
-function normalizeUrl(url) {
-  try {
-    const urlObj = new URL(url);
-
-    if (
-      urlObj.hostname === "vimeo.com" ||
-      urlObj.hostname === "www.vimeo.com"
-    ) {
-      const pathParts = urlObj.pathname.split("/").filter((p) => p);
-      const videoId = pathParts.find((part) => /^\d+$/.test(part));
-
-      if (videoId) {
-        return `https://player.vimeo.com/video/${videoId}`;
-      }
-    }
-
-    return url;
-  } catch (error) {
-    return url;
-  }
+function getInstagramArgs(url) {
+  canonicalizeInstagramPostUrl(url);
+  return [
+    "--referer", "https://www.instagram.com/",
+    "--add-header", `User-Agent:${INSTAGRAM_USER_AGENT}`,
+  ];
 }
 
 /**
  * 获取视频信息
  */
 async function getVideoInfo(url) {
-  url = normalizeUrl(url);
-
-  if (isInstagramPostUrl(url)) {
-    const sourceUrl = canonicalizeInstagramPostUrl(url);
-    const args = [
-      "--dump-single-json",
-      "--ignore-no-formats-error",
-      "--skip-download",
-      "--no-warnings",
-      ...getSiteArgs(sourceUrl),
-      sourceUrl,
-    ];
-    const output = await execYtDlp(args);
-    const info = JSON.parse(output.trim());
-    const collection = buildInstagramCollectionInfo(info, sourceUrl);
-    if (collection) return collection;
+  let sourceUrl;
+  try {
+    sourceUrl = canonicalizeInstagramPostUrl(url);
+  } catch (error) {
+    throw invalidInstagramUrlError();
   }
+  await verifyInstagramRedirectChain(sourceUrl);
 
-  const args = ["--dump-json", "--no-warnings", ...getSiteArgs(url), url];
-
+  const args = [
+    "--dump-single-json",
+    "--ignore-no-formats-error",
+    "--skip-download",
+    "--no-warnings",
+    ...getInstagramArgs(sourceUrl),
+    sourceUrl,
+  ];
   const output = await execYtDlp(args);
-  const info = JSON.parse(output.trim().split("\n")[0]);
-
-  return {
-    title: info.title || i18next.t("error.untitledVideo"),
-    description: info.description || "",
-    duration: info.duration || 0,
-    thumbnail: info.thumbnail || null,
-    uploader: info.uploader || info.channel || i18next.t("error.unknown"),
-    extractor: info.extractor || i18next.t("error.unknown"),
-    webpage_url: info.webpage_url || url,
-    id: info.id || null,
-  };
-}
-
-/**
- * 净化文件名
- */
-function sanitizeFilename(filename) {
-  return String(filename || i18next.t("error.untitledVideo"))
-    .replace(/[<>:"/\\|?*]/g, "_")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 160);
+  const info = JSON.parse(output.trim());
+  return buildInstagramCollectionInfo(info, sourceUrl);
 }
 
 /**
@@ -458,6 +505,7 @@ async function downloadInstagramImageFallbacks(url, imageItems) {
   const total = Math.max(...imageItems.map((item) => item.total || item.index));
   const digits = Math.max(2, String(total).length);
   const canonicalUrl = canonicalizeInstagramPostUrl(url);
+  await verifyInstagramRedirectChain(canonicalUrl);
   const outputTemplate = path.join(outputDir, `%(playlist_index)0${digits}d_%(id)s.%(ext)s`);
   const args = [
     canonicalUrl,
@@ -470,7 +518,7 @@ async function downloadInstagramImageFallbacks(url, imageItems) {
     "--ignore-errors",
     "--ignore-no-formats-error",
     "--no-warnings",
-    ...getSiteArgs(canonicalUrl),
+    ...getInstagramArgs(canonicalUrl),
   ];
 
   try {
@@ -505,6 +553,7 @@ async function downloadInstagramCollection(url, collection, onProgress, onStatus
   const failures = [];
   const digits = Math.max(2, String(collection.items.length).length);
   const canonicalUrl = canonicalizeInstagramPostUrl(url);
+  await verifyInstagramRedirectChain(canonicalUrl);
   const videoItems = collection.items.filter((item) => item.type === "video");
 
   if (onStatus) onStatus(i18next.t("ui.downloading"));
@@ -525,7 +574,7 @@ async function downloadInstagramCollection(url, collection, onProgress, onStatus
       "--ignore-no-formats-error",
       "--no-warnings",
       ...getProgressArgs(),
-      ...getSiteArgs(canonicalUrl),
+      ...getInstagramArgs(canonicalUrl),
     ];
 
     const ffmpeg = getFfmpegPath();
@@ -581,6 +630,12 @@ async function downloadInstagramCollection(url, collection, onProgress, onStatus
  * @returns {Promise<Object>} - 返回成功文件、总数和失败项
  */
 async function downloadVideo(url, onProgress, onStatus, preloadedInfo = null) {
+  let sourceUrl;
+  try {
+    sourceUrl = canonicalizeInstagramPostUrl(url);
+  } catch (error) {
+    throw invalidInstagramUrlError();
+  }
   let videoInfo;
 
   if (preloadedInfo) {
@@ -589,72 +644,12 @@ async function downloadVideo(url, onProgress, onStatus, preloadedInfo = null) {
   } else {
     // 需要获取信息
     if (onStatus) onStatus(i18next.t("download.fetchingInfo"));
-    try {
-      videoInfo = await getVideoInfo(url);
-      if (onStatus) onStatus(`${i18next.t("download.foundVideo")}: ${videoInfo.title}`);
-    } catch (error) {
-      videoInfo = {
-        title: i18next.t("error.untitledVideo"),
-        extractor: i18next.t("error.unknown"),
-      };
-    }
+    videoInfo = await getVideoInfo(sourceUrl);
+    if (onStatus) onStatus(`${i18next.t("download.foundVideo")}: ${videoInfo.title}`);
   }
 
-  if (videoInfo.type === "collection") {
-    return downloadInstagramCollection(url, videoInfo, onProgress, onStatus);
-  }
-
-  const outputDir = getTempDir();
-  const sanitizedTitle = sanitizeFilename(videoInfo.title);
-  
-  // 使用模板支持多视频下载：%(title)s_%(autonumber)s.%(ext)s
-  const outputTemplate = path.join(outputDir, `${sanitizedTitle}_%(autonumber)s.%(ext)s`);
-
-  url = normalizeUrl(url);
-
-  const args = [
-    url,
-    "-o",
-    outputTemplate,
-    "-f",
-    "bestvideo+bestaudio/best",
-    "--merge-output-format",
-    "mp4",
-    "--no-warnings",
-    ...getProgressArgs(),
-    ...getSiteArgs(url),
-  ];
-
-  const ffmpeg = getFfmpegPath();
-  if (ffmpeg && fs.existsSync(ffmpeg)) {
-    args.push("--ffmpeg-location", path.dirname(ffmpeg));
-  }
-
-  if (onStatus) onStatus(i18next.t("ui.downloading"));
-
-  // 记录下载前的文件列表
-  const filesBefore = new Set(fs.existsSync(outputDir) ? fs.readdirSync(outputDir) : []);
-
-  await execYtDlp(args, onProgress);
-
-  // 获取下载后新增的文件
-  const filesAfter = fs.readdirSync(outputDir);
-  const newFiles = filesAfter.filter(f => !filesBefore.has(f) && f.startsWith(sanitizedTitle));
-
-  if (newFiles.length === 0) {
-    throw new Error(i18next.t("error.fileNotFound"));
-  }
-
-  // 返回所有下载的视频
-  return {
-    files: newFiles.map(filename => ({
-      path: path.join(outputDir, filename),
-      metadata: videoInfo,
-      filename: filename,
-    })),
-    total: newFiles.length,
-    failures: [],
-  };
+  if (videoInfo.type !== "collection") throw invalidInstagramUrlError();
+  return downloadInstagramCollection(sourceUrl, videoInfo, onProgress, onStatus);
 }
 
 /**
@@ -686,6 +681,7 @@ module.exports = {
   parseYtDlpProgressLine,
   createCollectionProgressHandler,
   createThumbnailProgressOutputHandler,
+  verifyInstagramRedirectChain,
   refreshInstagramImageItems,
   downloadInstagramImageFallbacks,
 };

@@ -3,6 +3,8 @@
  * 处理用户界面交互
  */
 
+const { isInstagramPostUrl } = require("./url-policy");
+
 /**
  * 更新 UI 主题
  */
@@ -60,18 +62,6 @@ function setHeaderMode(mode) {
 }
 
 /**
- * 验证 URL 格式
- */
-function isValidUrl(string) {
-  try {
-    const url = new URL(string);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch (_) {
-    return false;
-  }
-}
-
-/**
  * 设置输入栏事件
  */
 function setupInputBar() {
@@ -81,7 +71,7 @@ function setupInputBar() {
   if (!urlInput || !addButton) return;
 
   const syncButtonState = () => {
-    const enabled = isValidUrl(urlInput.value.trim());
+    const enabled = isInstagramPostUrl(urlInput.value.trim());
     addButton.classList.toggle("disabled", !enabled);
     addButton.disabled = !enabled;
   };
@@ -97,7 +87,7 @@ function setupInputBar() {
     const url = urlInput.value.trim();
     if (!url) return;
 
-    if (!isValidUrl(url)) {
+    if (!isInstagramPostUrl(url)) {
       setInputBarState("error", i18next.t("error.invalidUrl"));
       return;
     }
@@ -621,7 +611,7 @@ module.exports = {
   setPluginVersion,
   showMainUI,
   setupDependencyMenus,
-  isValidUrl,
+  isInstagramPostUrl,
   setupInputBar,
   setInputBarState,
   appendQueueItem,

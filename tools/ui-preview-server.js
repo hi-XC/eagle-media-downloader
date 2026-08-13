@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.documentElement.setAttribute("theme", theme);
 
   appName.textContent = zh ? "素材下载助手" : "Media Downloader";
-  input.placeholder = zh ? "粘贴帖子链接" : "Paste a post link";
+  input.placeholder = zh ? "粘贴 Instagram 帖子链接" : "Paste an Instagram post link";
   addButton.classList.add("disabled");
   addButton.disabled = true;
 
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("depsEngineTitle").textContent = zh ? "下载引擎" : "Download engine";
     document.getElementById("ytdlpDesc").textContent = "Video extraction & download engine";
     document.getElementById("ffmpegDesc").textContent = "Video merging & transcoding engine";
-    document.getElementById("pluginVersion").textContent = zh ? "版本 0.2.2" : "Version 0.2.2";
+    document.getElementById("pluginVersion").textContent = zh ? "版本 0.2.3" : "Version 0.2.3";
 
     const setDependency = (prefix, status, detail, hasMenu) => {
       document.getElementById(prefix + "Status").textContent = status;

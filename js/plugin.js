@@ -16,6 +16,7 @@ const {
   getFfmpegVersion,
 } = require("./binary");
 const downloader = require("./downloader");
+const { canonicalizeInstagramPostUrl } = require("./url-policy");
 const eagleApi = require("./eagle");
 const ui = require("./ui");
 
@@ -244,10 +245,17 @@ function initializeMainUI() {
 function addToQueue(url) {
   if (!isInitialized) return;
 
+  let sourceUrl;
+  try {
+    sourceUrl = canonicalizeInstagramPostUrl(url);
+  } catch (error) {
+    return;
+  }
+
   const item = {
     id: ++queueIdCounter,
-    url,
-    title: url,
+    url: sourceUrl,
+    title: sourceUrl,
     state: "waiting",
     progress: 0,
     itemProgress: 0,
@@ -357,6 +365,7 @@ async function importInstagramImages(imageItems, sourceUrl, onProgress) {
 async function executeDownload(item) {
   let preparingTimer = null;
   try {
+    item.url = canonicalizeInstagramPostUrl(item.url);
     item.state = "preparing";
     item.elapsedSeconds = 0;
     ui.updateQueueItem(item.id, item);

@@ -2,10 +2,28 @@
 
 Versions before 0.1.0 are inherited from the upstream projects and retained for historical attribution.
 
+## 0.2.3
+
+- 将所有来源入口限制为 Instagram HTTPS `/p/<shortcode>` 帖子链接
+- 对输入、队列、重试和 yt-dlp 子进程应用同一套 URL 校验
+- 在 yt-dlp 启动前逐跳检查 HTTP 重定向目的地
+- 使用 Eagle 的 Chromium 网络层执行重定向检查，以沿用系统代理配置
+- 移除通用站点 fallback 及 Bilibili、Vimeo 处理逻辑
+- 修正首次依赖安装流程和素材导入顺序的中英文说明
+
+---
+
+- Restricted every source entry point to Instagram HTTPS `/p/<shortcode>` post URLs
+- Applied one URL policy to input, queueing, retries, and yt-dlp execution
+- Added hop-by-hop HTTP redirect validation before yt-dlp starts
+- Used Eagle's Chromium network stack for redirect checks so system proxy settings are honored
+- Removed generic-site fallback and Bilibili/Vimeo handling
+- Corrected the English and Chinese dependency setup and import-order descriptions
+
 ## 0.1.0 (development fork)
 
 - 新增 Instagram 公开帖子与 Carousel 混合素材下载
-- 图片与视频按原帖顺序编号，并作为独立素材导入 Eagle
+- 图片与视频按原帖索引编号，并作为独立素材导入 Eagle
 - 单项失败时保留其他成功素材，并显示完成数量
 - 获取素材信息时显示动态进度与真实等待时间
 - Carousel 下载显示总体进度及当前条目进度
@@ -19,7 +37,7 @@ Versions before 0.1.0 are inherited from the upstream projects and retained for 
 ---
 
 - Added downloads for public Instagram posts and mixed-media carousels
-- Preserved post order and imported every image or video as a separate Eagle item
+- Numbered media by its post index and imported every image or video as a separate Eagle item
 - Kept successful items when an individual item failed and displayed the completion count
 - Added indeterminate parsing feedback with real elapsed time
 - Added overall and current-item progress for carousel downloads

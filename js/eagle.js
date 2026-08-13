@@ -3,10 +3,15 @@
  * 处理与 Eagle 应用的交互
  */
 
+const {
+  canonicalizeInstagramPostUrl,
+  isAllowedInstagramMediaUrl,
+} = require("./url-policy");
+
 function buildImportOptions(metadata, sourceUrl) {
   return {
     name: metadata.title || i18next.t("error.downloadedVideo"),
-    website: sourceUrl,
+    website: canonicalizeInstagramPostUrl(sourceUrl),
     annotation: metadata.description ? metadata.description.slice(0, 500) : "",
   };
 }
@@ -56,6 +61,9 @@ async function importRemoteImagesToEagle(items, sourceUrl, onProgress, maxConcur
       activeItems++;
       reportProgress();
       try {
+        if (!isAllowedInstagramMediaUrl(item.imageUrl)) {
+          throw new Error(i18next.t("error.invalidUrl"));
+        }
         const itemId = await eagle.item.addFromURL(
           item.imageUrl,
           buildImportOptions(item, sourceUrl),

@@ -24,11 +24,12 @@ npm run package   # 打包为 媒体下载器-开发版.eagleplugin（构建 + �
 
 - `plugin.js` — 入口，处理 Eagle 生命周期钩子，管理下载队列并协调各模块
 - `ui.js` — 队列项渲染与状态更新，输入栏事件，主题切换
-- `downloader.js` — 调用 yt-dlp 子进程，解析实时进度输出，处理多视频下载，Vimeo URL 规范化
+- `url-policy.js` — 统一限制 Instagram HTTPS `/p/<shortcode>` 来源链接、重定向和媒体分发地址
+- `downloader.js` — 校验网络目的地，调用 yt-dlp 子进程，并解析 Instagram 帖子和下载进度
 - `binary.js` — yt-dlp 下载与版本检查（对比 GitHub Releases），macOS 隔离属性清除，Eagle 内置 ffmpeg 路径解析
 - `eagle.js` — 调用 `eagle.item.addFromPath()` 将视频导入 Eagle 库
 
-下载流程：用户输入 URL → `getVideoInfo()`（yt-dlp --dump-json）→ `downloadVideo()`（yt-dlp 子进程，临时目录）→ `importToEagle()` → 清理临时文件。
+下载流程：用户输入 URL → URL 策略和重定向校验 → `getVideoInfo()`（yt-dlp --dump-single-json）→ 图片并发导入及视频下载 → `importToEagle()` → 清理临时文件。
 
 ## 国际化
 

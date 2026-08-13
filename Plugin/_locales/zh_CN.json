@@ -6,7 +6,7 @@
   },
   "ui": {
     "appTitle": "素材下载助手",
-    "inputPlaceholder": "粘贴帖子链接",
+    "inputPlaceholder": "粘贴 Instagram 帖子链接",
     "downloadBtn": "下载",
     "downloadingBtn": "下载中...",
     "preparing": "准备中...",
@@ -49,8 +49,9 @@
   },
   "error": {
     "notInitialized": "插件尚未初始化完成",
-    "emptyUrl": "请输入素材链接",
-    "invalidUrl": "请输入有效的素材链接",
+    "emptyUrl": "请输入 Instagram 帖子链接",
+    "invalidUrl": "请输入有效的 Instagram 公开帖子链接",
+    "redirectCheckFailed": "无法验证 Instagram 链接的跳转目标，请检查网络后重试",
     "fileNotFound": "下载完成但找不到文件",
     "eagleImportFailed": "导入 Eagle 失败",
     "duplicateFound": "该视频已存在于库中",

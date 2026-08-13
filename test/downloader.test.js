@@ -21,7 +21,31 @@ test("recognizes and canonicalizes Instagram post URLs", () => {
   const url = "https://www.instagram.com/p/ABC123/?img_index=2#fragment";
   assert.equal(isInstagramPostUrl(url), true);
   assert.equal(canonicalizeInstagramPostUrl(url), "https://www.instagram.com/p/ABC123/");
+  assert.equal(isInstagramPostUrl("https://instagram.com/p/ABC_123-/"), true);
+  assert.equal(isInstagramPostUrl("https://m.instagram.com/p/ABC123/"), true);
+  assert.equal(isInstagramPostUrl("http://www.instagram.com/p/ABC123/"), false);
   assert.equal(isInstagramPostUrl("https://www.instagram.com/reel/ABC123/"), false);
+  assert.equal(isInstagramPostUrl("https://www.instagram.com/p/ABC123/comments/"), false);
+  assert.equal(isInstagramPostUrl("https://www.instagram.com.evil.test/p/ABC123/"), false);
+  assert.equal(isInstagramPostUrl("https://127.0.0.1/p/ABC123/"), false);
+  assert.equal(isInstagramPostUrl("https://localhost/p/ABC123/"), false);
+  assert.equal(isInstagramPostUrl("https://user@instagram.com/p/ABC123/"), false);
+  assert.equal(isInstagramPostUrl("https://instagram.com:8443/p/ABC123/"), false);
+  assert.throws(() => canonicalizeInstagramPostUrl("https://example.com/p/ABC123/"));
+});
+
+test("treats a single Instagram post as a one-item collection", () => {
+  const sourceUrl = "https://www.instagram.com/p/ABC123/";
+  const collection = buildInstagramCollectionInfo({
+    id: "video-1",
+    title: "Post by example",
+    formats: [{ url: "https://scontent.cdninstagram.com/video.mp4" }],
+  }, sourceUrl);
+
+  assert.equal(collection.type, "collection");
+  assert.equal(collection.items.length, 1);
+  assert.equal(collection.items[0].type, "video");
+  assert.equal(collection.items[0].index, 1);
 });
 
 test("keeps carousel order and classifies videos and images", () => {
