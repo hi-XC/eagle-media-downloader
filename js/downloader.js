@@ -7,7 +7,8 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 const https = require("https");
-const { spawn } = require("child_process");
+const { execFile, spawn } = require("child_process");
+const { HttpsProxyAgent } = require("https-proxy-agent");
 
 const { getYtDlpPath, getFfmpegPath, BIN_DIR, downloadYtDlp } = require("./binary");
 const {
@@ -109,13 +110,121 @@ function getElectronNet() {
   }
 }
 
-function verifyWithElectronNet(requestUrl, electronNet) {
+function getElectronSession() {
+  try {
+    const electron = require("electron");
+    return electron.session?.defaultSession
+      || electron.remote?.session?.defaultSession
+      || electron.remote?.getCurrentWebContents?.()?.session
+      || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function parseElectronProxyRules(proxyRules) {
+  if (typeof proxyRules !== "string") return null;
+
+  const schemes = {
+    PROXY: "http",
+    HTTP: "http",
+    HTTPS: "https",
+    SOCKS: "socks5",
+    SOCKS5: "socks5",
+    SOCKS4: "socks4",
+  };
+
+  for (const rule of proxyRules.split(";")) {
+    const normalizedRule = rule.trim();
+    if (!normalizedRule) continue;
+    if (normalizedRule.toUpperCase() === "DIRECT") return null;
+
+    const match = normalizedRule.match(/^(PROXY|HTTP|HTTPS|SOCKS|SOCKS5|SOCKS4)\s+(.+)$/i);
+    if (!match) continue;
+
+    try {
+      const protocol = schemes[match[1].toUpperCase()];
+      const parsed = new URL(`${protocol}://${match[2].trim()}`);
+      if (!parsed.hostname || parsed.username || parsed.password) continue;
+      if ((parsed.pathname && parsed.pathname !== "/") || parsed.search || parsed.hash) continue;
+      return parsed.toString();
+    } catch (error) {
+      // Ignore malformed proxy rules and try the next Chromium fallback.
+    }
+  }
+
+  return null;
+}
+
+function normalizeHttpProxyUrl(proxyUrl) {
+  if (typeof proxyUrl !== "string" || !proxyUrl.trim()) return null;
+
+  try {
+    const parsed = new URL(proxyUrl.trim());
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    if (!parsed.hostname || parsed.username || parsed.password) return null;
+    if ((parsed.pathname && parsed.pathname !== "/") || parsed.search || parsed.hash) return null;
+    return parsed.toString();
+  } catch (error) {
+    return null;
+  }
+}
+
+function parseMacSystemProxy(proxySettings) {
+  if (typeof proxySettings !== "string") return null;
+
+  const readValue = (key) => {
+    const match = proxySettings.match(new RegExp(`^\\s*${key}\\s*:\\s*(.+?)\\s*$`, "m"));
+    return match ? match[1].trim() : null;
+  };
+  const enabled = readValue("HTTPSEnable") === "1";
+  const host = readValue("HTTPSProxy");
+  const port = Number.parseInt(readValue("HTTPSPort"), 10);
+  if (!enabled || !host || !Number.isInteger(port) || port < 1 || port > 65535) return null;
+
+  return normalizeHttpProxyUrl(`http://${host}:${port}`);
+}
+
+function readMacSystemProxy() {
+  if (os.platform() !== "darwin") return Promise.resolve(null);
+
+  return new Promise((resolve) => {
+    execFile("/usr/sbin/scutil", ["--proxy"], { timeout: 2000, maxBuffer: 64 * 1024 }, (error, stdout) => {
+      resolve(error ? null : parseMacSystemProxy(stdout));
+    });
+  });
+}
+
+async function resolveYtDlpProxy(sourceUrl, electronSession = getElectronSession()) {
+  if (electronSession?.resolveProxy) {
+    try {
+      const rules = await Promise.race([
+        electronSession.resolveProxy(sourceUrl),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("proxy resolution timed out")), 3000)),
+      ]);
+      const sessionProxy = parseElectronProxyRules(rules);
+      if (sessionProxy) return sessionProxy;
+    } catch (error) {
+      // Fall through to process and operating-system proxy settings.
+    }
+  }
+
+  const environmentProxy = normalizeHttpProxyUrl(
+    process.env.HTTPS_PROXY
+      || process.env.https_proxy
+      || process.env.HTTP_PROXY
+      || process.env.http_proxy,
+  );
+  return environmentProxy || readMacSystemProxy();
+}
+
+function verifyWithElectronNet(requestUrl, electronNet, electronSession = getElectronSession()) {
   return new Promise((resolve, reject) => {
     let currentUrl = requestUrl;
     let redirectCount = 0;
     let settled = false;
 
-    const request = electronNet.request({
+    const requestOptions = {
       method: "GET",
       url: requestUrl,
       redirect: "manual",
@@ -124,7 +233,9 @@ function verifyWithElectronNet(requestUrl, electronNet) {
         "User-Agent": INSTAGRAM_USER_AGENT,
         Range: "bytes=0-0",
       },
-    });
+    };
+    if (electronSession) requestOptions.session = electronSession;
+    const request = electronNet.request(requestOptions);
 
     const finish = (error) => {
       if (settled) return;
@@ -135,8 +246,8 @@ function verifyWithElectronNet(requestUrl, electronNet) {
     };
 
     const timer = setTimeout(() => {
-      request.abort();
       finish(new Error(i18next.t("error.redirectCheckFailed")));
+      request.abort();
     }, 20000);
 
     request.on("redirect", (_statusCode, _method, redirectUrl) => {
@@ -154,12 +265,17 @@ function verifyWithElectronNet(requestUrl, electronNet) {
       response.destroy?.();
       finish();
     });
-    request.on("error", (error) => finish(error));
+    request.on("error", (error) => {
+      const message = error.code === "ETIMEDOUT"
+        ? i18next.t("error.networkTimeout")
+        : error.message;
+      finish(new Error(message));
+    });
     request.end();
   });
 }
 
-function verifyWithNodeHttps(requestUrl, redirectsRemaining = 5, visited = new Set()) {
+function verifyWithNodeHttps(requestUrl, redirectsRemaining = 5, visited = new Set(), agent = undefined) {
   if (visited.has(requestUrl) || redirectsRemaining < 0) {
     return Promise.reject(invalidInstagramUrlError());
   }
@@ -168,6 +284,7 @@ function verifyWithNodeHttps(requestUrl, redirectsRemaining = 5, visited = new S
   return new Promise((resolve, reject) => {
     const request = https.request(requestUrl, {
       method: "GET",
+      agent,
       headers: {
         "User-Agent": INSTAGRAM_USER_AGENT,
         Range: "bytes=0-0",
@@ -191,7 +308,7 @@ function verifyWithNodeHttps(requestUrl, redirectsRemaining = 5, visited = new S
           return;
         }
 
-        verifyWithNodeHttps(nextUrl, redirectsRemaining - 1, visited)
+        verifyWithNodeHttps(nextUrl, redirectsRemaining - 1, visited, agent)
           .then(resolve)
           .catch(reject);
         return;
@@ -208,12 +325,17 @@ function verifyWithNodeHttps(requestUrl, redirectsRemaining = 5, visited = new S
   });
 }
 
-function verifyInstagramRedirectChain(url) {
+async function verifyInstagramRedirectChain(url) {
   let requestUrl;
   try {
     requestUrl = canonicalizeInstagramPostUrl(url);
   } catch (error) {
-    return Promise.reject(invalidInstagramUrlError());
+    throw invalidInstagramUrlError();
+  }
+
+  const proxyUrl = await resolveYtDlpProxy(requestUrl);
+  if (proxyUrl && /^https?:\/\//i.test(proxyUrl)) {
+    return verifyWithNodeHttps(requestUrl, 5, new Set(), new HttpsProxyAgent(proxyUrl));
   }
 
   const electronNet = getElectronNet();
@@ -345,14 +467,14 @@ function createThumbnailProgressOutputHandler(onProgress, items, offset, total) 
 /**
  * 执行 yt-dlp 命令
  */
-function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
+async function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
+  validateYtDlpArgs(args);
+
+  const sourceUrl = args.find((value) => typeof value === "string" && isInstagramPostUrl(value));
+  const proxyUrl = sourceUrl ? await resolveYtDlpProxy(sourceUrl) : null;
+  const effectiveArgs = proxyUrl ? ["--proxy", proxyUrl, ...args] : args;
+
   return new Promise((resolve, reject) => {
-    try {
-      validateYtDlpArgs(args);
-    } catch (error) {
-      reject(error);
-      return;
-    }
 
     const ytdlp = getYtDlpPath();
 
@@ -377,7 +499,7 @@ function execYtDlp(args, onProgress, onOutput, allowRecovery = true) {
 
     let proc;
     try {
-      proc = spawn(ytdlp, args, { cwd: BIN_DIR });
+      proc = spawn(ytdlp, effectiveArgs, { cwd: BIN_DIR });
     } catch (error) {
       if (allowRecovery && isCorruptedBinaryError(error)) {
         recoverFromCorruptBinary(error);
@@ -681,6 +803,9 @@ module.exports = {
   parseYtDlpProgressLine,
   createCollectionProgressHandler,
   createThumbnailProgressOutputHandler,
+  parseElectronProxyRules,
+  parseMacSystemProxy,
+  resolveYtDlpProxy,
   verifyInstagramRedirectChain,
   refreshInstagramImageItems,
   downloadInstagramImageFallbacks,

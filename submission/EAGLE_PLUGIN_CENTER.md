@@ -7,9 +7,9 @@
 | 项目 | 状态 |
 | --- | --- |
 | 插件功能 | 仅支持 Instagram 公开 `/p/<shortcode>` 帖子和 Carousel |
-| macOS 测试 | 已完成基础验证 |
-| Windows 测试 | `0.2.2` 全部通过；`0.2.3` 的平台无关安全规则已通过自动化回归测试 |
-| 最终上架包 | `media-downloader-v0.2.3.eagleplugin`，已通过完整性检查 |
+| macOS 测试 | `0.2.4` 已完成系统代理环境下的 8 项 Carousel 实际导入验证 |
+| Windows 测试 | `0.2.2` 全部通过；`0.2.4` 的平台无关安全规则已通过自动化回归测试 |
+| 最终上架包 | `media-downloader-v0.2.4.eagleplugin`，已通过完整性检查 |
 | 图标 | 512 x 512 PNG，已准备 |
 | 功能截图 | 中英文各 4 张，800 × 600 px，已完成 |
 | 封面图 | 中英文各 1 张，1560 × 1040 px，已完成 |
@@ -68,6 +68,7 @@ Import images and videos from public Instagram posts and carousels directly into
 - 不自动添加来源平台标签。
 - 使用 Eagle 官方 FFmpeg 依赖，并校验运行时下载的 yt-dlp。
 - 将网络入口限制为 Instagram HTTPS `/p/<shortcode>` 帖子，并验证重定向目的地。
+- 修复 macOS 系统代理已启用时仍可能直连 Instagram 并超时的问题。
 
 ### English
 
@@ -77,6 +78,7 @@ Import images and videos from public Instagram posts and carousels directly into
 - Does not add platform tags automatically.
 - Uses Eagle's official FFmpeg dependency and verifies the downloaded yt-dlp executable.
 - Restricts network entry points to Instagram HTTPS `/p/<shortcode>` posts and validates redirect destinations.
+- Fixes a macOS timeout that could occur when an enabled system proxy was not inherited by Eagle.
 
 ## 提交前检查
 

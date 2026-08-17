@@ -5,6 +5,7 @@ This project is distributed under the MIT License. It also uses or downloads the
 ## Bundled Dependency
 
 - [i18next](https://github.com/i18next/i18next), MIT License. It is bundled into the plugin JavaScript during the build.
+- [https-proxy-agent](https://github.com/TooTallNate/proxy-agents), MIT License, and its bundled MIT-licensed dependencies `agent-base` and `debug`. They allow the plugin's HTTPS safety checks to use an enabled system HTTP(S) proxy.
 
 ## Runtime Dependencies
 

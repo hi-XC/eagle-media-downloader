@@ -15,6 +15,9 @@ const {
   selectInstagramImageUrl,
   createCollectionProgressHandler,
   createThumbnailProgressOutputHandler,
+  parseElectronProxyRules,
+  parseMacSystemProxy,
+  resolveYtDlpProxy,
 } = require("../js/downloader");
 
 test("recognizes and canonicalizes Instagram post URLs", () => {
@@ -142,4 +145,50 @@ test("reports image entries as they start and finish", () => {
       { itemIndex: 4, itemTotal: 12, percent: 100 },
     ],
   );
+});
+
+test("converts Electron proxy rules into yt-dlp proxy URLs", () => {
+  assert.equal(parseElectronProxyRules("DIRECT"), null);
+  assert.equal(
+    parseElectronProxyRules("PROXY 127.0.0.1:7897; DIRECT"),
+    "http://127.0.0.1:7897/",
+  );
+  assert.equal(
+    parseElectronProxyRules("SOCKS5 127.0.0.1:7897"),
+    "socks5://127.0.0.1:7897",
+  );
+  assert.equal(
+    parseElectronProxyRules("HTTPS proxy.example.com:443"),
+    "https://proxy.example.com/",
+  );
+  assert.equal(parseElectronProxyRules("PROXY user:pass@127.0.0.1:7897"), null);
+  assert.equal(parseElectronProxyRules("PROXY 127.0.0.1:7897/path"), null);
+});
+
+test("reads the proxy from the active Electron session", async () => {
+  const calls = [];
+  const proxy = await resolveYtDlpProxy(
+    "https://www.instagram.com/p/ABC123/",
+    {
+      async resolveProxy(url) {
+        calls.push(url);
+        return "PROXY 127.0.0.1:7897; DIRECT";
+      },
+    },
+  );
+
+  assert.deepEqual(calls, ["https://www.instagram.com/p/ABC123/"]);
+  assert.equal(proxy, "http://127.0.0.1:7897/");
+});
+
+test("reads an enabled HTTPS proxy from macOS system settings", () => {
+  const settings = `<dictionary> {
+    HTTPSEnable : 1
+    HTTPSPort : 7897
+    HTTPSProxy : 127.0.0.1
+  }`;
+
+  assert.equal(parseMacSystemProxy(settings), "http://127.0.0.1:7897/");
+  assert.equal(parseMacSystemProxy(settings.replace("HTTPSEnable : 1", "HTTPSEnable : 0")), null);
+  assert.equal(parseMacSystemProxy(settings.replace("HTTPSPort : 7897", "HTTPSPort : 70000")), null);
 });

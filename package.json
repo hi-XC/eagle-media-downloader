@@ -1,6 +1,6 @@
 {
   "name": "eagle-media-downloader",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Eagle plugin for downloading mixed image and video posts",
   "main": "js/plugin.js",
   "scripts": {
@@ -8,9 +8,10 @@
     "dev": "node esbuild.config.js --watch",
     "test": "node --test",
     "prepublish": "npm run build && rm -rf Plugin/bin/",
-    "package": "npm run build && rm -rf Plugin/bin/ && rm -f media-downloader-v0.2.3.eagleplugin && cd Plugin && zip -r -X ../media-downloader-v0.2.3.eagleplugin . -x '*.DS_Store'"
+    "package": "npm run build && rm -rf Plugin/bin/ && rm -f media-downloader-v0.2.4.eagleplugin && cd Plugin && zip -r -X ../media-downloader-v0.2.4.eagleplugin . -x '*.DS_Store'"
   },
   "dependencies": {
+    "https-proxy-agent": "7.0.6",
     "i18next": "^25.8.19"
   },
   "devDependencies": {

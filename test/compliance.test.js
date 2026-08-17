@@ -33,6 +33,7 @@ test("limits runtime downloads to supported Instagram post URLs", () => {
   assert.match(downloader, /validateYtDlpArgs\(args\)/);
   assert.match(downloader, /verifyInstagramRedirectChain/);
   assert.match(downloader, /redirect: "manual"/);
+  assert.match(downloader, /requestOptions\.session = electronSession/);
   assert.match(downloader, /request\.followRedirect\(\)/);
   assert.match(ui, /isInstagramPostUrl/);
   assert.match(policy, /parsed\.protocol !== "https:"/);

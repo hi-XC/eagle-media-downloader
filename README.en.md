@@ -4,7 +4,7 @@ English | [中文](./README.md)
 
 Import publicly accessible Instagram image posts, video posts, and carousels into [Eagle](https://eagle.cool/). This release accepts only `https://instagram.com/p/<shortcode>` post URLs and valid Instagram subdomains.
 
-**Current version: v0.2.3 (Eagle Plugin Center resubmission candidate)**
+**Current version: v0.2.4 (Eagle Plugin Center review update candidate)**
 
 > Tested with Eagle 4.0 on macOS and Windows.
 
@@ -26,22 +26,23 @@ Import publicly accessible Instagram image posts, video posts, and carousels int
 - Imports completed media into Eagle and records source information
 - Supports always-on-top mode, Chinese and English interfaces, and light and dark themes
 - Does not add platform tags automatically during import
+- Uses an enabled macOS system proxy when accessing Instagram
 
 ## Interface
 
 | Paste a Link | Downloading |
 | --- | --- |
-| ![Waiting for a post link](./docs/screenshots/idle.png?v=0.2.3) | ![Current item and overall download progress](./docs/screenshots/downloading.png?v=0.2.3) |
+| ![Waiting for a post link](./docs/screenshots/idle.png?v=0.2.4) | ![Current item and overall download progress](./docs/screenshots/downloading.png?v=0.2.4) |
 
 | Completed | Settings |
 | --- | --- |
-| ![Completed downloads](./docs/screenshots/completed.png?v=0.2.3) | ![Download engine settings](./docs/screenshots/settings.png?v=0.2.3) |
+| ![Completed downloads](./docs/screenshots/completed.png?v=0.2.4) | ![Download engine settings](./docs/screenshots/settings.png?v=0.2.4) |
 
 ## Installation
 
 Requirements: Eagle 4.0 or higher and an internet connection.
 
-`v0.2.3` is being prepared for resubmission to the Eagle Plugin Center. A public download link will be added with the first formal GitHub Release.
+`v0.2.4` is being prepared as an Eagle Plugin Center review update. A public download link will be added with the first formal GitHub Release.
 
 Developers can clone this repository, run `npm run package`, and open the generated `.eagleplugin` file to install it through Eagle.
 

@@ -4,7 +4,7 @@
 
 用于将无需登录即可访问的 Instagram 公开图片帖、视频帖和轮播帖（Carousel）导入 [Eagle](https://cn.eagle.cool/)。当前版本只接受 `https://instagram.com/p/<shortcode>` 及其合法子域名形式的帖子链接。
 
-**当前版本：v0.2.3（Eagle 插件中心重新上架候选版）**
+**当前版本：v0.2.4（Eagle 插件中心审核更新候选版）**
 
 > 已在 macOS 和 Windows 版 Eagle 4.0 中完成实机测试。
 
@@ -26,22 +26,23 @@
 - 下载完成后自动导入 Eagle，并记录来源信息
 - 支持窗口置顶、中英文界面，以及浅色和深色主题
 - 导入时不自动添加来源平台标签
+- 在 macOS 上沿用已启用的系统代理访问 Instagram
 
 ## 界面
 
 | 输入链接 | 正在下载 |
 | --- | --- |
-| ![等待输入帖子链接](./docs/screenshots/idle.png?v=0.2.3) | ![显示当前素材和总体下载进度](./docs/screenshots/downloading.png?v=0.2.3) |
+| ![等待输入帖子链接](./docs/screenshots/idle.png?v=0.2.4) | ![显示当前素材和总体下载进度](./docs/screenshots/downloading.png?v=0.2.4) |
 
 | 已完成 | 设置 |
 | --- | --- |
-| ![显示已完成的下载项目](./docs/screenshots/completed.png?v=0.2.3) | ![下载引擎设置](./docs/screenshots/settings.png?v=0.2.3) |
+| ![显示已完成的下载项目](./docs/screenshots/completed.png?v=0.2.4) | ![下载引擎设置](./docs/screenshots/settings.png?v=0.2.4) |
 
 ## 安装
 
 环境要求：Eagle 4.0 或更高版本，并保持网络连接。
 
-`v0.2.3` 正在准备重新提交 Eagle 插件中心，公开下载地址将在首个正式 Release 发布后补充。
+`v0.2.4` 正在准备提交 Eagle 插件中心审核更新，公开下载地址将在首个正式 Release 发布后补充。
 
 开发者可以克隆本仓库并运行 `npm run package` 生成安装包，再打开 `.eagleplugin` 文件并按照 Eagle 的提示完成安装。
 

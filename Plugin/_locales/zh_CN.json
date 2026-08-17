@@ -52,6 +52,7 @@
     "emptyUrl": "请输入 Instagram 帖子链接",
     "invalidUrl": "请输入有效的 Instagram 公开帖子链接",
     "redirectCheckFailed": "无法验证 Instagram 链接的跳转目标，请检查网络后重试",
+    "networkTimeout": "连接超时。如果当前网络需要代理才能访问 Instagram，请在代理工具中开启系统代理后重试",
     "fileNotFound": "下载完成但找不到文件",
     "eagleImportFailed": "导入 Eagle 失败",
     "duplicateFound": "该视频已存在于库中",

@@ -52,6 +52,7 @@
     "emptyUrl": "Enter an Instagram post URL",
     "invalidUrl": "Enter a valid public Instagram post URL",
     "redirectCheckFailed": "Could not verify the Instagram redirect destination. Check your connection and try again.",
+    "networkTimeout": "Connection timed out. If Instagram requires a proxy on your network, enable your proxy app's system proxy and try again.",
     "fileNotFound": "Download complete but file not found",
     "eagleImportFailed": "Failed to import to Eagle",
     "duplicateFound": "This video already exists in library",

@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("depsEngineTitle").textContent = zh ? "下载引擎" : "Download engine";
     document.getElementById("ytdlpDesc").textContent = "Video extraction & download engine";
     document.getElementById("ffmpegDesc").textContent = "Video merging & transcoding engine";
-    document.getElementById("pluginVersion").textContent = zh ? "版本 0.2.3" : "Version 0.2.3";
+    document.getElementById("pluginVersion").textContent = zh ? "版本 0.2.4" : "Version 0.2.4";
 
     const setDependency = (prefix, status, detail, hasMenu) => {
       document.getElementById(prefix + "Status").textContent = status;
